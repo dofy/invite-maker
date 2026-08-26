@@ -1,0 +1,27 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { createTheme, MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import App from './App';
+import './styles.css';
+
+const theme = createTheme({
+  primaryColor: 'gold',
+  colors: {
+    gold: ['#fff7e7', '#f7e9cf', '#ead2a3', '#dcb976', '#d1a04e', '#c78e35', '#b97d2a', '#9f6722', '#80511f', '#68431d'],
+  },
+  fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
+  headings: { fontFamily: '"Playfair Display", "Songti SC", serif' },
+  defaultRadius: 'md',
+});
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <MantineProvider theme={theme} defaultColorScheme="dark">
+      <Notifications position="top-right" limit={4} />
+      <App />
+    </MantineProvider>
+  </StrictMode>,
+);

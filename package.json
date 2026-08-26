@@ -2,18 +2,47 @@
   "name": "invite-maker",
   "version": "1.0.0",
   "private": true,
-  "description": "邀请函生成器：Pages 前端编辑器 + Worker(satori+resvg) 服务端渲染",
+  "description": "纯前端邀请函编辑器：占位符批量填充、PNG 合成与 ZIP 下载",
   "type": "module",
   "scripts": {
-    "dev": "wrangler pages dev public --compatibility-date=2026-08-01",
-    "deploy": "wrangler pages deploy public",
-    "fonts": "node scripts/fetch-fonts.mjs"
-  },
-  "dependencies": {
-    "satori": "^0.12.1",
-    "@resvg/resvg-wasm": "^2.6.2"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "check": "tsc -b && vitest run && vite build",
+    "deploy": "pnpm build && wrangler pages deploy dist"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^26.3.0",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.125.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  },
+  "dependencies": {
+    "@mantine/core": "^9.5.2",
+    "@mantine/hooks": "^9.5.2",
+    "@mantine/notifications": "^9.5.2",
+    "@tabler/icons-react": "^3.46.0",
+    "jszip": "^3.10.1",
+    "konva": "^10.3.1",
+    "papaparse": "^5.7.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-konva": "^19.2.5",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.15"
   }
 }

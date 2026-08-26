@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" role="img" aria-labelledby="title description">
+  <title id="title">邀请函底图占位预览</title>
+  <desc id="description">米白与淡粉渐变背景，搭配金色边框和植物线稿，提示用户上传自己的邀请函底图。</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf8"/>
+      <stop offset="0.48" stop-color="#f9f1e7"/>
+      <stop offset="1" stop-color="#f4e4df"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9c7134"/>
+      <stop offset="0.45" stop-color="#d8b778"/>
+      <stop offset="1" stop-color="#8f6329"/>
+    </linearGradient>
+    <radialGradient id="blush">
+      <stop offset="0" stop-color="#dca8a0" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#dca8a0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#745c43" flood-opacity="0.13"/>
+    </filter>
+    <pattern id="grain" width="48" height="48" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="9" r="0.8" fill="#8b6f4f" opacity="0.08"/>
+      <circle cx="31" cy="21" r="0.65" fill="#8b6f4f" opacity="0.07"/>
+      <circle cx="18" cy="42" r="0.7" fill="#8b6f4f" opacity="0.06"/>
+    </pattern>
+  </defs>
+
+  <rect width="900" height="1200" fill="url(#paper)"/>
+  <circle cx="40" cy="80" r="310" fill="url(#blush)"/>
+  <circle cx="850" cy="1135" r="360" fill="url(#blush)"/>
+  <rect width="900" height="1200" fill="url(#grain)"/>
+
+  <rect x="54" y="54" width="792" height="1092" rx="28" fill="#fffdf9" fill-opacity="0.56" stroke="url(#gold)" stroke-width="2.5" filter="url(#shadow)"/>
+  <rect x="69" y="69" width="762" height="1062" rx="20" fill="none" stroke="#b89052" stroke-width="1" stroke-dasharray="2 8" opacity="0.72"/>
+
+  <g fill="none" stroke="#9d7948" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+    <path d="M70 285 C135 250 183 193 216 111"/>
+    <path d="M104 264 C103 228 119 203 148 187 C151 222 136 248 104 264Z"/>
+    <path d="M137 235 C147 196 172 172 207 165 C201 202 177 226 137 235Z"/>
+    <path d="M166 190 C164 156 180 130 209 113 C213 148 198 174 166 190Z"/>
+    <path d="M116 251 C84 245 64 225 55 197 C88 199 109 216 116 251Z"/>
+    <circle cx="215" cy="110" r="7" fill="#b98f57" stroke="none"/>
+  </g>
+  <g transform="translate(900 1200) rotate(180)" fill="none" stroke="#9d7948" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+    <path d="M70 285 C135 250 183 193 216 111"/>
+    <path d="M104 264 C103 228 119 203 148 187 C151 222 136 248 104 264Z"/>
+    <path d="M137 235 C147 196 172 172 207 165 C201 202 177 226 137 235Z"/>
+    <path d="M166 190 C164 156 180 130 209 113 C213 148 198 174 166 190Z"/>
+    <path d="M116 251 C84 245 64 225 55 197 C88 199 109 216 116 251Z"/>
+    <circle cx="215" cy="110" r="7" fill="#b98f57" stroke="none"/>
+  </g>
+
+  <g text-anchor="middle">
+    <rect x="326" y="285" width="248" height="48" rx="24" fill="#fffaf2" stroke="#c39b60" stroke-width="1.5"/>
+    <text x="450" y="316" fill="#9a7442" font-family="Arial, sans-serif" font-size="18" letter-spacing="4">PREVIEW · 预览</text>
+
+    <path d="M302 407 H406 M494 407 H598" fill="none" stroke="#b68b4f" stroke-width="1.5"/>
+    <path d="M450 391 L466 407 L450 423 L434 407Z" fill="none" stroke="#b68b4f" stroke-width="1.5"/>
+
+    <text x="450" y="525" fill="#5f4936" font-family="Georgia, 'Times New Roman', serif" font-size="62" letter-spacing="9">INVITATION</text>
+    <text x="450" y="625" fill="#7a5a3a" font-family="'Songti SC', 'Noto Serif SC', serif" font-size="92" letter-spacing="18">邀请函</text>
+    <text x="450" y="682" fill="#9b7d60" font-family="Georgia, serif" font-size="22" font-style="italic" letter-spacing="2">Begin with a beautiful moment</text>
+
+    <g transform="translate(450 795)">
+      <circle r="52" fill="#fffaf3" stroke="#b88e53" stroke-width="2"/>
+      <path d="M0 25 V-21 M-18 -3 L0 -21 L18 -3" fill="none" stroke="#9d7440" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M-24 25 H24" fill="none" stroke="#9d7440" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <text x="450" y="895" fill="#6d543e" font-family="'PingFang SC', Arial, sans-serif" font-size="28" font-weight="600">点击或拖拽上传底图</text>
+    <text x="450" y="936" fill="#9d816a" font-family="Arial, sans-serif" font-size="20" letter-spacing="1">Upload a background to begin</text>
+    <text x="450" y="1028" fill="#ae927c" font-family="'PingFang SC', Arial, sans-serif" font-size="17" letter-spacing="2">此图片仅用于占位 · 上传后自动替换</text>
+  </g>
+</svg>

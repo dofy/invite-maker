@@ -1,105 +1,105 @@
 # AGENTS.md — invite-maker
 
-> 给 AI 编码助手（Codex / Cursor / Claude 等）的项目上下文。人类也可当作项目说明读。
+> 给 AI 编码助手（Codex / Cursor / Claude 等）的项目上下文。
 
 ## 项目目的
 
-**邀请函生成器**：用户上传一张底图 → 在图上可视化叠加文字（拖拽定位占位符、调字体/字号/字重/颜色/对齐/字距/描边）→ 实时预览 → 导出高清 PNG。
+**邀请函生成器**：用户上传底图，在图上拖拽模板文本并调整样式，然后下载单张高清 PNG，或导入 CSV/TXT 批量生成 PNG ZIP。
 
-典型场景：婚礼 / 生日 / 年会 / 活动邀请函，用户各自填字段并下载。
+核心原则：
 
-核心理念：**「所见即所得」编辑 + 「预览≈成品」渲染**。前端预览用的坐标/样式导出成一份模板 JSON，后端按同一份 JSON 渲染，保证预览和成品一致。
+- 所见即所得，预览与导出共用同一套 Konva 场景与百分比坐标
+- 纯前端处理，底图和名单不离开用户设备
+- 使用 React + Vite + TypeScript 组织编辑器状态，不引入后端
 
 ## 架构
 
-**Cloudflare Pages（前端）+ Pages Functions（Worker 后端）**，同一项目、同一次部署。
+项目是纯静态 Cloudflare Pages：
 
-```
-浏览器编辑器（预览定位）            后端渲染（最终出图，可选）
-─────────────────────            ─────────────────────
-上传底图 → Canvas 预览            读取同一份模板 JSON
-拖拽文本框、调样式        ──JSON──► satori 排版 → SVG
-                                  resvg-wasm → PNG
-导出：本地 Canvas PNG              返回 image/png
+```text
+上传底图 → Konva 预览 → 拖拽模板文本/调整样式
+                         ├─ 下载当前图片：原图尺寸 PNG
+导入 CSV/TXT ────────────└─ 批量生成 PNG → JSZip 打包 → 直接下载
 ```
 
-两种出图并存，用户按需选：
-
-| 方式 | 实现 | 优点 | 取舍 |
-|------|------|------|------|
-| **本地渲染** | 浏览器 Canvas | 零后端、零成本、隐私好（图不出设备） | 依赖用户系统字体，跨端不保证一致 |
-| **服务端渲染** | Worker + satori + resvg-wasm | 跨端字体一致（内嵌思源黑体）、超高清 | 走后端，受 Worker CPU 限制 |
+不使用 Pages Functions、Worker 图片渲染、R2 或远程下载链接。
 
 ## 目录结构
 
-```
+```text
 invite-maker/
-├── public/                    # 静态前端（Pages 直接托管）
-│   ├── index.html             # 编辑器 UI + 控制面板
-│   └── app.js                 # 编辑器逻辑：上传/拖拽/预览/导出/调后端
-├── functions/                 # Pages Functions（自动编译成 Worker）
-│   └── api/
-│       └── render.js          # POST /api/render — satori+resvg 服务端渲染
-├── wrangler.toml              # Pages + Functions 配置
-├── package.json
-└── README.md
+├── index.html              # Vite 入口
+├── src/
+│   ├── components/         # React 控制面板与 Konva 编辑画布
+│   ├── lib/                # 数据解析、模板校验、渲染与导出
+│   ├── store/              # Zustand 编辑器状态
+│   └── model.ts            # TypeScript 领域模型
+├── tests/                  # Vitest 核心逻辑测试
+├── public/                 # 占位底图与 favicon
+├── wrangler.toml
+├── vite.config.ts
+└── package.json
 ```
 
-## 关键实现约定
+## 关键约定
 
-- **坐标系**：文本图层用**百分比定位**（`xPct`/`yPct`，相对画布），导出时按原图分辨率还原。前后端共用这套坐标，保证一致。
-- **字号缩放**：预览画布可能被缩小（最大 720px），导出/发后端时字号按 `natW / stage.offsetWidth` 比例放大回原图分辨率。
-- **模板 JSON 格式**（前后端契约，见 README「服务端渲染 API」）：
-  ```jsonc
-  { "canvas": {"width","height"},
-    "background": "data:image/... | https://...",
-    "layers": [{ "text","xPct","yPct","size","weight","color","align","spacing","stroke","strokeW","font" }] }
-  ```
-- **描边**：Canvas 用 `strokeText`；satori 不支持 `-webkit-text-stroke`，用多方向 `text-shadow` 近似（见 `render.js` 的 `buildStroke`）。
-- **WASM 加载**：resvg 的 wasm **必须静态 import**（`import wasm from '@resvg/resvg-wasm/index_bg.wasm'`）让 wrangler 打包进 Worker；**不能运行时 fetch 再 initWasm**，否则报 `Wasm code generation disallowed by embedder`。
-- **wrangler 版本**：用 **4.x**（新 workerd 才支持打包的 wasm 模块）。
+- **统一文本模型**：所有图层都是模板文本，只有内部 `id`；不区分 `data` / `fixed`，也不要求用户定义 key。
+- **数据变量**：`{{txt}}` 读取 TXT 当前行；`{{csv.表头}}` 按 CSV 表头读取当前行字段。
+- **导入推断**：扫描全部图层自动切换 TXT/CSV；两种数据变量不能混用；无数据变量时禁用批量导入。
+- **导入失效**：仅在 TXT/CSV 数据变量集合变化时清空已有导入；固定文字、动态变量或样式变化不清空。
+- **动态变量**：支持 `{{date}}`、`{{time}}`、`{{datetime}}`、`{{index}}`、`{{index:N}}`、`{{uuid}}`，变量名和冒号两侧允许空格。
+- **序号补零**：`index:N` 的 N 限制为 1–12；不足位数左侧补零，数值超过位数时不截断。
+- **动态值作用域**：批量序号从 1 开始；一次批处理共用基准时间；UUID 每张图片、每个图层独立生成，同层重复引用复用。
+- **预览规则**：导入前数据变量保留原样；导入后默认选第一条，点击或键盘激活数据行可切换预览；画布和单张下载使用当前记录，批量生成处理全部记录。
+- **空画布占位**：未上传时显示 `public/placeholder.svg` 并建立编辑画布，但禁止将占位图作为正式底图导出。
+- **坐标系**：图层使用 `xPct` / `yPct`；Konva Stage 内部始终使用底图原始像素，只缩放预览 Stage。
+- **九宫格锚点**：`align` 只控制框内文字对齐；`anchorX` 与 `anchorY` 独立决定坐标锚定的文本框边界。
+- **文本框宽度**：`width` 为原图像素，`null` 表示随内容伸缩；固定宽度自动换行，可通过数值或 Transformer 手柄调整。
+- **安全内边距与吸附**：`canvas.padding` 默认为 32 原图像素；拖动吸附画布边缘、中心、安全区和其他图层的左/中/右与上/中/下边界；Alt 临时关闭。
+- **统一渲染**：预览、单张 PNG 和批量 PNG 必须复用 `src/lib/render.ts` 中的文本节点配置，禁止再维护独立 DOM 文本布局。
+- **移动端布局**：竖屏上方画布固定可见、下方面板独立滚动；横屏小高度使用左右布局；交互兼容鼠标、手指和触控笔。
+- **字体来源**：保留系统字体，通过 Google Fonts CSS API 提供中英日韩字体；每种网络字体必须带同语言系统回退。
+- **UI 组件**：使用 Mantine 与 Tabler Icons；成功、失败与警告使用 Notifications，删除和覆盖使用 Modal；不得引入原生 `alert` / `confirm` / `prompt`。
+- **Canvas 字体一致性**：生成 PNG 前调用 `document.fonts.load` 等待当前图层字体与字符子集。
+- **批量导出**：浏览器逐张生成 PNG，按需加载 JSZip 后以 STORE 模式打包；PNG 不二次压缩。
+- **批次上限**：单次最多 200 条，避免浏览器峰值内存失控。
+- **模板 JSON**：包含 `canvas` 与 `layers`；不保存图层类型/key，也不内嵌底图。导入只替换图层与安全内边距，限制 1 MB / 200 图层并由 Zod 校验。
+- **隐私边界**：不得为图片、模板或名单增加上传行为，除非用户明确改变产品方向。
 
 ## 开发命令
 
 ```bash
 pnpm install
-pnpm dev          # wrangler pages dev（含 Functions），http://localhost:8788
-pnpm deploy       # wrangler pages deploy public（首次需 wrangler login）
+pnpm dev          # http://localhost:5173
+pnpm check        # TypeScript + Vitest + Vite build
+pnpm deploy       # 构建并部署 dist
 ```
 
 ## 技术栈
 
-- 前端：原生 HTML + JS + Canvas（无框架，保持轻量；后续可按需迁 React+Vite）
-- 后端：Cloudflare Pages Functions（Worker），`satori` + `@resvg/resvg-wasm`
-- 字体：服务端内嵌思源黑体 Noto Sans SC（400/700）
-- 包管理：pnpm；Node 22+
-- 部署：Cloudflare Pages（免费额度内）
+- React + Vite + TypeScript
+- Zustand、Konva / react-konva
+- Mantine、Papa Parse、Zod、JSZip
+- Vitest、pnpm、Node 22+
+- Cloudflare Pages 静态托管
 
-## 免费额度说明
+## 当前状态
 
-- Pages：无限静态请求 → 前端永久免费
-- 本地 Canvas 渲染：零后端，永久 0 成本
-- Worker（服务端渲染）：免费 10 万请求/天，⚠️ 每请求 10ms CPU 硬限，satori+resvg 可能超 → 高频/批量场景需升 $5/月 付费 Worker
-- 不使用 Cloudflare Images（付费产品），叠字全靠 Canvas / satori
-
-## 下一步计划
-
-按优先级（✅ 已完成 / ⬜ 待做）：
-
-- [x] 前端所见即所得编辑器（上传、拖拽定位、调样式、实时预览）
-- [x] 本地 Canvas 导出 PNG（普通 + 高清）
-- [x] 服务端渲染 API（satori + resvg-wasm，中文字体）
-- [x] 导出模板 JSON（前后端共用坐标/样式）
-- [ ] **部署上线**：`wrangler pages deploy` 到 Cloudflare Pages
-- [ ] **模板系统**：预置几套邀请函模板（婚礼/生日/年会），用户只填字段
-- [ ] **R2 存档 + 分享链接**：生成成品存 R2，返回可分享/下载的短链
-- [ ] **批量生成**：一份模板 + 多组字段（如宾客名单）→ 批量出图 + zip 打包下载（参考老项目 `dofy/invitation-card-creator` 的能力）
-- [ ] **字体子集化**：思源黑体全量较大，按需子集化减小 Worker 冷启动与流量
-- [ ] **字距导出**：本地 Canvas 导出目前忽略 letterSpacing 微调，需逐字绘制补齐
-- [ ] **多行富文本编辑**：当前双击用 `prompt` 编辑，可升级为行内编辑器
-- [ ] **移动端适配**：面板/画布在小屏下的布局优化
-- [ ] **撤销/重做 + 图层顺序拖拽**
+- [x] 所见即所得编辑器
+- [x] 无 key 的统一模板文本图层
+- [x] TXT/CSV/日期时间/补零序号/UUID 变量
+- [x] 中英日韩 Google Fonts 与导出前字体加载
+- [x] 自动推断并校验 CSV/TXT 数据源
+- [x] 原图分辨率单张 PNG 下载
+- [x] 批量生成 PNG 并直接下载 ZIP
+- [x] 导入与导出模板 JSON
+- [x] Canvas 字距导出
+- [x] 移动端自适应布局与触控拖拽
+- [ ] 部署上线
+- [ ] 预置模板系统
+- [ ] 超大批次分段生成 / Web Worker
+- [ ] 撤销/重做与图层顺序调整
 
 ## 相关项目
 
-- 老项目 `dofy/invitation-card-creator`（2023，Next.js 13 + node-canvas）：重型服务端架构，需 Node 服务器，上不了 Pages 静态托管。本项目是全新的轻量 Cloudflare 版本，**不续做老仓库**，但批量生成 + zip 打包功能可参考搬运。
+老项目 `dofy/invitation-card-creator` 使用 Next.js + node-canvas。本项目不延续其服务端架构，仅在需要时参考产品交互。
