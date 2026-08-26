@@ -1,23 +1,36 @@
-# Tsudoi
+<div align="center">
+  <img src="public/favicon.svg" width="88" height="88" alt="Tsudoi logo" />
+  <h1>Tsudoi</h1>
+  <p><strong>Design once. Personalize every invitation.</strong></p>
+  <p>A privacy-first visual editor for high-resolution invitations and local CSV/TXT batch generation.</p>
+  <p>
+    <a href="https://tsudoi.yahaha.net"><strong>Open Tsudoi</strong></a>
+    ·
+    <a href="#local-development">Run locally</a>
+    ·
+    <a href="https://github.com/dofy/invite-maker/issues">Feedback</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/github/package-json/v/dofy/invite-maker?style=flat-square&amp;color=b89a67" alt="Version" />
+    <img src="https://img.shields.io/badge/PWA-offline_ready-456a64?style=flat-square" alt="Offline-ready PWA" />
+    <img src="https://img.shields.io/badge/data-local_only-765a4a?style=flat-square" alt="Data stays local" />
+    <img src="https://img.shields.io/badge/languages-8-4f647d?style=flat-square" alt="Eight interface languages" />
+  </p>
+  <p><a href="README.zh-CN.md">简体中文</a> · <strong>English</strong> · <a href="README.ja.md">日本語</a></p>
+</div>
 
-[简体中文](README.zh-CN.md) | **English** | [日本語](README.ja.md)
+![Tsudoi visual invitation workspace](public/og-image.png)
 
-Website: [tsudoi.yahaha.net](https://tsudoi.yahaha.net)
+Tsudoi turns one background design into one or an entire batch of personalized invitations. Upload a background, add and style text directly on the canvas, then download an original-resolution PNG. For personalized versions, import CSV or TXT data and export the complete batch as a ZIP archive.
 
-Turn one background design into one or an entire batch of personalized invitations.
+> [!IMPORTANT]
+> Backgrounds, recipient data, templates, and generated files remain on your device. Tsudoi has no upload or server-side rendering path.
 
-Tsudoi is a universal visual invitation tool. Upload a background, add text, refine the layout, and download a high-resolution PNG. For multiple personalized versions, import CSV or TXT data and generate the complete batch as a ZIP archive.
+## How It Works
 
-Backgrounds, recipient data, and generated files always remain on the current device and never need to be uploaded to a server.
-
-## From Background to Finished Image
-
-1. Upload a portrait, landscape, or square invitation background
-2. Add one or more text boxes and position them directly on the canvas
-3. Adjust the font, size, weight, color, outline, alignment, anchor, and fixed width
-4. Download a high-resolution PNG for a single image
-5. Insert data variables and import a CSV or TXT file for batch generation
-6. Preview each record, generate all images locally, and download the ZIP archive
+| 1. Design | 2. Personalize | 3. Export |
+| --- | --- | --- |
+| Upload a portrait, landscape, or square background. Add text, drag it into place, and fine-tune its style. | Mix regular text with CSV/TXT and dynamic variables. Import data and preview any record. | Download one original-resolution PNG or generate up to 200 images as a local ZIP. |
 
 ## Product Highlights
 

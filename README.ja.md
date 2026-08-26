@@ -1,23 +1,36 @@
-# Tsudoi · つどい
+<div align="center">
+  <img src="public/favicon.svg" width="88" height="88" alt="Tsudoi ロゴ" />
+  <h1>Tsudoi · つどい</h1>
+  <p><strong>一度デザインすれば、一人ひとりの招待状に。</strong></p>
+  <p>プライバシーを重視したビジュアルエディター。高解像度出力と CSV/TXT のローカル一括生成に対応します。</p>
+  <p>
+    <a href="https://tsudoi.yahaha.net"><strong>Tsudoi を開く</strong></a>
+    ·
+    <a href="#ローカル開発">ローカルで実行</a>
+    ·
+    <a href="https://github.com/dofy/invite-maker/issues">フィードバック</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/github/package-json/v/dofy/invite-maker?style=flat-square&amp;color=b89a67" alt="バージョン" />
+    <img src="https://img.shields.io/badge/PWA-offline_ready-456a64?style=flat-square" alt="オフライン対応 PWA" />
+    <img src="https://img.shields.io/badge/data-local_only-765a4a?style=flat-square" alt="データはローカル処理のみ" />
+    <img src="https://img.shields.io/badge/languages-8-4f647d?style=flat-square" alt="8つの表示言語" />
+  </p>
+  <p><a href="README.zh-CN.md">简体中文</a> · <a href="README.md">English</a> · <strong>日本語</strong></p>
+</div>
 
-[简体中文](README.zh-CN.md) | [English](README.md) | **日本語**
+![Tsudoi ビジュアル招待状ワークスペース](public/og-image.png)
 
-公式サイト：[tsudoi.yahaha.net](https://tsudoi.yahaha.net)
+Tsudoi（つどい）は、1枚の背景デザインから、1枚または複数のパーソナライズされた招待状を作成できるツールです。背景画像をアップロードし、キャンバス上でテキストを追加・調整して、元画像と同じ解像度の PNG をダウンロードできます。内容の異なる複数の画像が必要な場合は、CSV または TXT を読み込み、ローカルで一括生成して ZIP にまとめられます。
 
-1枚の背景デザインから、1枚または複数のパーソナライズされた招待状をすばやく作成できます。
+> [!IMPORTANT]
+> 背景画像、宛先データ、テンプレート、生成結果はすべてデバイス内に保持されます。Tsudoi に素材のアップロードやサーバー側の画像描画処理はありません。
 
-Tsudoi（つどい）は、汎用的なビジュアル招待状作成ツールです。背景画像をアップロードし、テキストを追加してレイアウトを整えるだけで、高解像度の PNG をダウンロードできます。内容の異なる複数の画像が必要な場合は、CSV または TXT データを読み込み、すべての画像を生成して ZIP にまとめてダウンロードできます。
+## 3ステップで作成
 
-背景画像、宛先データ、生成結果は常に現在のデバイス内に保持され、サーバーへアップロードする必要はありません。
-
-## 背景画像から完成データまで
-
-1. 縦長、横長、または正方形の招待状背景をアップロード
-2. 1つ以上のテキストボックスを追加し、キャンバス上で直接配置
-3. フォント、サイズ、太さ、色、アウトライン、揃え、アンカー、固定幅を調整
-4. 1枚だけ作成する場合は高解像度 PNG をダウンロード
-5. 一括作成ではデータ変数を挿入し、CSV または TXT を読み込み
-6. 各レコードをプレビューした後、すべての画像をローカルで生成して ZIP をダウンロード
+| 1. デザイン | 2. パーソナライズ | 3. 書き出し |
+| --- | --- | --- |
+| 縦長、横長、正方形の背景をアップロードし、テキストを追加して直接配置・調整します。 | 通常テキストと CSV/TXT・動的変数を組み合わせ、データ読み込み後は各レコードをプレビューできます。 | 元画像と同じ解像度の PNG を1枚ダウンロードするか、最大200枚をローカルで生成して ZIP にまとめます。 |
 
 ## 主な特長
 

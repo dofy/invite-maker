@@ -1,23 +1,36 @@
-# Tsudoi
+<div align="center">
+  <img src="public/favicon.svg" width="88" height="88" alt="Tsudoi 标志" />
+  <h1>Tsudoi</h1>
+  <p><strong>设计一次，为每个人生成专属邀请函。</strong></p>
+  <p>重视隐私的可视化邀请函编辑器，支持高清导出与 CSV/TXT 本地批量生成。</p>
+  <p>
+    <a href="https://tsudoi.yahaha.net"><strong>立即使用</strong></a>
+    ·
+    <a href="#本地开发">本地运行</a>
+    ·
+    <a href="https://github.com/dofy/invite-maker/issues">反馈建议</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/github/package-json/v/dofy/invite-maker?style=flat-square&amp;color=b89a67" alt="当前版本" />
+    <img src="https://img.shields.io/badge/PWA-offline_ready-456a64?style=flat-square" alt="支持离线的 PWA" />
+    <img src="https://img.shields.io/badge/data-local_only-765a4a?style=flat-square" alt="数据仅在本地处理" />
+    <img src="https://img.shields.io/badge/languages-8-4f647d?style=flat-square" alt="八种界面语言" />
+  </p>
+  <p><strong>简体中文</strong> · <a href="README.md">English</a> · <a href="README.ja.md">日本語</a></p>
+</div>
 
-**简体中文** | [English](README.md) | [日本語](README.ja.md)
+![Tsudoi 可视化邀请函工作台](public/og-image.png)
 
-产品主站：[tsudoi.yahaha.net](https://tsudoi.yahaha.net)
+Tsudoi 可以把一张设计底图，快速变成一张或一整批个性化邀请函。上传底图，在画布上添加并调整文字，即可下载原图分辨率 PNG；需要制作多个不同内容的版本时，还可以导入 CSV 或 TXT，在本地批量生成并打包下载。
 
-把一张设计底图，快速变成一张或一批个性化邀请函。
+> [!IMPORTANT]
+> 底图、名单、模板和生成结果始终留在你的设备上。Tsudoi 没有素材上传或服务端图片渲染流程。
 
-Tsudoi 是一款通用的可视化邀请函工具。上传底图、添加文字、调整排版，即可下载高清 PNG；需要制作多个不同内容的版本时，还可以导入 CSV 或 TXT，一次生成整批图片并打包下载。
+## 三步完成制作
 
-底图、名单和生成结果始终留在当前设备，不需要上传到服务器。
-
-## 从底图到成品
-
-1. 上传竖版、横版或方形邀请函底图
-2. 添加一个或多个文本框，在画布上直接拖动排版
-3. 调整字体、字号、字重、颜色、描边、对齐、锚点与固定宽度
-4. 单张使用时直接下载高清 PNG
-5. 批量使用时插入数据变量，导入 CSV 或 TXT
-6. 逐条预览确认后，在本地生成全部图片并下载 ZIP
+| 1. 设计 | 2. 个性化 | 3. 导出 |
+| --- | --- | --- |
+| 上传竖版、横版或方形底图，添加文字并直接拖动排版，细调各项样式。 | 混合普通文字、CSV/TXT 与动态变量，导入数据后可逐条切换预览。 | 下载单张原图分辨率 PNG，或在本地生成最多 200 张图片并打包为 ZIP。 |
 
 ## 产品亮点
 
@@ -85,7 +98,7 @@ Tsudoi 不上传底图、模板或名单，也不依赖服务端图片合成。�
 - Google Fonts 无法连接时会自动使用同语言系统字体，外观可能略有差异
 - 模板不内嵌底图，迁移模板时需要另行提供图片文件
 
-## 本地运行
+## 本地开发
 
 需要 Node.js 22+ 与 pnpm：
 

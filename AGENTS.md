@@ -35,7 +35,7 @@ invite-maker/
 │   ├── store/              # Zustand 编辑器状态
 │   └── model.ts            # TypeScript 领域模型
 ├── tests/                  # Vitest 核心逻辑测试
-├── public/                 # 占位底图与 favicon
+├── public/                 # 品牌图、PWA 图标、示例数据与占位底图
 ├── wrangler.toml
 ├── vite.config.ts
 └── package.json
@@ -95,7 +95,9 @@ pnpm run deploy   # 版本号升至下一个偶数，构建并部署 dist
 - [x] 导入与导出模板 JSON
 - [x] Canvas 字距导出
 - [x] 移动端自适应布局与触控拖拽
-- [ ] 部署上线
+- [x] PWA 安装、离线缓存与版本更新提示
+- [x] 简中、繁中、英、德、日、韩、西、法多语言界面
+- [x] Cloudflare Pages 正式部署（https://tsudoi.yahaha.net）
 - [ ] 预置模板系统
 - [ ] 超大批次分段生成 / Web Worker
 - [ ] 撤销/重做与图层顺序调整
