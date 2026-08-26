@@ -624,19 +624,21 @@ export function ControlPanel() {
       </div>
 
       <footer className="site-footer">
-        <span>{formatCopyright(window.location.hostname)}</span>
+        <span className="site-footer-meta">
+          <span className="site-footer-copyright" title={formatCopyright(window.location.hostname)}>
+            {formatCopyright(window.location.hostname)}
+          </span>
+          <span className="site-footer-version">v{packageJson.version}</span>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>
+            <IconBrandGithub size={14} stroke={1.8} />
+          </a>
+        </span>
         <nav className="site-footer-links" aria-label={t('footer.navigation')}>
           <a href="/about">{t('footer.about')}</a>
           <a href="/privacy">{t('footer.privacy')}</a>
           <a href="/terms">{t('footer.terms')}</a>
           <a href="https://github.com/dofy/invite-maker/issues" target="_blank" rel="noreferrer">{t('footer.contact')}</a>
         </nav>
-        <span className="site-footer-meta">
-          <span>v{packageJson.version}</span>
-          <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>
-            <IconBrandGithub size={14} stroke={1.8} />
-          </a>
-        </span>
       </footer>
 
       <Modal opened={deleteId !== null} onClose={() => setDeleteId(null)} title={t('modal.deleteTitle')} centered>
