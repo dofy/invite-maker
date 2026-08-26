@@ -626,9 +626,9 @@ export function ControlPanel() {
       <footer className="site-footer">
         <span>{formatCopyright(window.location.hostname)}</span>
         <nav className="site-footer-links" aria-label={t('footer.navigation')}>
-          <a href="/about.html">{t('footer.about')}</a>
-          <a href="/privacy.html">{t('footer.privacy')}</a>
-          <a href="/terms.html">{t('footer.terms')}</a>
+          <a href="/about">{t('footer.about')}</a>
+          <a href="/privacy">{t('footer.privacy')}</a>
+          <a href="/terms">{t('footer.terms')}</a>
           <a href="https://github.com/dofy/invite-maker/issues" target="_blank" rel="noreferrer">{t('footer.contact')}</a>
         </nav>
         <span className="site-footer-meta">

@@ -10,9 +10,9 @@ Last updated: 2026-08-27
 ## Product
 
 - [Tsudoi editor](https://tsudoi.yahaha.net/): Upload a background, position and style template text, and export an original-resolution PNG.
-- [About Tsudoi](https://tsudoi.yahaha.net/about.html): Product purpose, architecture, principles, and technical references.
-- [Privacy policy](https://tsudoi.yahaha.net/privacy.html): Local processing, hosting requests, fonts, local preferences, and offline caching.
-- [Terms of use](https://tsudoi.yahaha.net/terms.html): Acceptable use, user content responsibility, availability, and changes.
+- [About Tsudoi](https://tsudoi.yahaha.net/about): Product purpose, architecture, principles, and technical references.
+- [Privacy policy](https://tsudoi.yahaha.net/privacy): Local processing, hosting requests, fonts, local preferences, and offline caching.
+- [Terms of use](https://tsudoi.yahaha.net/terms): Acceptable use, user content responsibility, availability, and changes.
 
 ## Core capabilities
 

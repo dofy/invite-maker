@@ -52,7 +52,8 @@ describe('static discovery and citation surface', () => {
     for (const page of ['about.html', 'privacy.html', 'terms.html']) {
       const document = parseHtml(`public/${page}`);
       expect(document.querySelectorAll('h1')).toHaveLength(1);
-      expect(document.querySelector('link[rel="canonical"]')).not.toBeNull();
+      const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href');
+      expect(canonical).toMatch(/^https:\/\/tsudoi\.yahaha\.net\/(about|privacy|terms)$/);
       expect(document.querySelector('a[href="https://github.com/dofy/invite-maker/issues"]')).not.toBeNull();
     }
   });
