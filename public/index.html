@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>邀请函生成器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0f1115; color: #e6e6e6; display: flex; height: 100vh; overflow: hidden;
+  }
+  /* 左侧画布区 */
+  #stage-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #16181d; position: relative; overflow: auto; padding: 24px;
+  }
+  #stage {
+    position: relative; box-shadow: 0 8px 40px rgba(0,0,0,.5);
+    background: #222 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="10" height="10" fill="%23333"/><rect x="10" y="10" width="10" height="10" fill="%23333"/></svg>') repeat;
+  }
+  #bg { display: block; max-width: 100%; user-select: none; -webkit-user-drag: none; }
+  .tbox {
+    position: absolute; cursor: move; padding: 4px 8px; white-space: pre;
+    border: 1px dashed transparent; line-height: 1.3; transform: translate(-50%, -50%);
+    left: 50%; top: 50%;
+  }
+  .tbox.selected { border-color: #4a9eff; }
+  .tbox .handle {
+    position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px;
+    background: #4a9eff; border-radius: 50%; cursor: nwse-resize; display: none;
+  }
+  .tbox.selected .handle { display: block; }
+  /* 右侧控制面板 */
+  #panel {
+    width: 320px; background: #1c1f26; border-left: 1px solid #2a2e37;
+    padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px;
+  }
+  h1 { font-size: 16px; font-weight: 600; color: #fff; }
+  .group { display: flex; flex-direction: column; gap: 8px; }
+  .group > label { font-size: 12px; color: #9aa0aa; text-transform: uppercase; letter-spacing: .5px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  input[type=text], textarea, select {
+    width: 100%; background: #0f1115; border: 1px solid #2a2e37; color: #e6e6e6;
+    padding: 8px 10px; border-radius: 6px; font-size: 14px; font-family: inherit;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input[type=range] { flex: 1; }
+  input[type=color] { width: 40px; height: 32px; border: none; background: none; cursor: pointer; }
+  button {
+    background: #4a9eff; color: #fff; border: none; padding: 10px 14px;
+    border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500;
+  }
+  button.secondary { background: #2a2e37; }
+  button:hover { opacity: .9; }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row button { flex: 1; }
+  .layers { display: flex; flex-direction: column; gap: 6px; }
+  .layer-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+    background: #0f1115; border: 1px solid #2a2e37; border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  .layer-item.active { border-color: #4a9eff; }
+  .layer-item .del { margin-left: auto; color: #ff6b6b; cursor: pointer; }
+  .hint { font-size: 12px; color: #6b7280; line-height: 1.5; }
+  .val { font-size: 12px; color: #9aa0aa; min-width: 36px; text-align: right; }
+  .upload-label {
+    display: block; padding: 14px; border: 2px dashed #2a2e37; border-radius: 8px;
+    text-align: center; cursor: pointer; color: #9aa0aa; font-size: 14px;
+  }
+  .upload-label:hover { border-color: #4a9eff; color: #4a9eff; }
+</style>
+</head>
+<body>
+  <div id="stage-wrap">
+    <div id="stage">
+      <img id="bg" alt="上传底图后显示" />
+    </div>
+  </div>
+
+  <div id="panel">
+    <h1>🎴 邀请函生成器</h1>
+
+    <div class="group">
+      <label>1. 底图</label>
+      <label class="upload-label" for="file">点击或拖拽上传图片</label>
+      <input type="file" id="file" accept="image/*" hidden />
+    </div>
+
+    <div class="group">
+      <label>2. 文本图层</label>
+      <div class="btn-row">
+        <button id="addText">+ 添加文本</button>
+      </div>
+      <div class="layers" id="layers"></div>
+    </div>
+
+    <div class="group" id="editor" style="display:none">
+      <label>3. 编辑选中文本</label>
+      <textarea id="txtContent" placeholder="输入文字，支持多行"></textarea>
+
+      <div class="row">
+        <span class="hint" style="min-width:44px">字体</span>
+        <select id="txtFont">
+          <option value='"PingFang SC","Microsoft YaHei",sans-serif'>黑体</option>
+          <option value='"Songti SC","SimSun",serif'>宋体</option>
+          <option value='"Kaiti SC","KaiTi",serif'>楷体</option>
+          <option value='Georgia,serif'>Georgia</option>
+          <option value='"Helvetica Neue",Arial,sans-serif'>Helvetica</option>
+          <option value='"Brush Script MT",cursive'>手写体</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <span class="hint" style="min-width:44px">字号</span>
+        <input type="range" id="txtSize" min="10" max="200" value="40" />
+        <span class="val" id="txtSizeVal">40</span>
+      </div>
+
+      <div class="row">
+        <span class="hint" style="min-width:44px">字重</span>
+        <select id="txtWeight">
+          <option value="300">细</option>
+          <option value="400" selected>常规</option>
+          <option value="600">中粗</option>
+          <option value="700">粗</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <span class="hint" style="min-width:44px">颜色</span>
+        <input type="color" id="txtColor" value="#ffffff" />
+        <span class="hint" style="min-width:44px">对齐</span>
+        <select id="txtAlign" style="flex:1">
+          <option value="center">居中</option>
+          <option value="left">左</option>
+          <option value="right">右</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <span class="hint" style="min-width:44px">字距</span>
+        <input type="range" id="txtSpacing" min="-5" max="30" value="0" />
+        <span class="val" id="txtSpacingVal">0</span>
+      </div>
+
+      <div class="row">
+        <span class="hint" style="min-width:44px">描边</span>
+        <input type="color" id="txtStroke" value="#000000" />
+        <input type="range" id="txtStrokeW" min="0" max="10" value="0" style="flex:1" />
+        <span class="val" id="txtStrokeVal">0</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>4. 生成</label>
+      <div class="btn-row">
+        <button id="exportBtn">导出 PNG</button>
+        <button id="exportHiBtn" class="secondary">高清导出</button>
+      </div>
+      <p class="hint">拖动文字定位，右下角圆点拉伸字号。高清导出按原图分辨率渲染。</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
