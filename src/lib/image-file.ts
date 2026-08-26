@@ -1,7 +1,8 @@
 import type { BackgroundModel } from '../model';
+import { AppError } from './app-error';
 
 export async function backgroundFromFile(file: File): Promise<BackgroundModel> {
-  if (!file.type.startsWith('image/')) throw new Error('请选择图片文件');
+  if (!file.type.startsWith('image/')) throw new AppError('errors.imageFile');
   const url = URL.createObjectURL(file);
   const image = new Image();
   image.decoding = 'async';
@@ -15,9 +16,9 @@ export async function backgroundFromFile(file: File): Promise<BackgroundModel> {
       naturalHeight: image.naturalHeight,
       isPlaceholder: false,
     };
-  } catch (error) {
+  } catch {
     URL.revokeObjectURL(url);
-    throw error;
+    throw new AppError('errors.imageDecode');
   }
 }
 

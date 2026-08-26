@@ -1,8 +1,6 @@
 export const MAX_BATCH_ROWS = 200;
 export const MAX_TEMPLATE_BYTES = 1024 * 1024;
 export const MAX_TEMPLATE_LAYERS = 200;
-export const PLACEHOLDER_WIDTH = 900;
-export const PLACEHOLDER_HEIGHT = 1200;
 export const DEFAULT_CANVAS_PADDING = 32;
 
 export type HorizontalAlign = 'left' | 'center' | 'right';
@@ -58,10 +56,10 @@ export interface TemplateFile {
 
 export const DEFAULT_FONT = '"PingFang SC","Microsoft YaHei",sans-serif';
 
-export function createTextLayer(index: number, preset: Partial<TextLayer> = {}): TextLayer {
+export function createTextLayer(_index: number, preset: Partial<TextLayer> = {}): TextLayer {
   return {
     id: preset.id ?? crypto.randomUUID(),
-    text: preset.text ?? `#${index}`,
+    text: preset.text ?? 'Text',
     xPct: preset.xPct ?? 50,
     yPct: preset.yPct ?? 50,
     size: preset.size ?? 40,

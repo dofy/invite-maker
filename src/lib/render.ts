@@ -1,6 +1,7 @@
 import Konva from 'konva';
 import type { BatchRecord, CanvasModel, TextLayer } from '../model';
 import { resolveTemplateText, type ResolveContext } from './template';
+import { AppError } from './app-error';
 
 export function anchorOffsetX(anchor: TextLayer['anchorX'], width: number) {
   if (anchor === 'left') return 0;
@@ -91,7 +92,7 @@ export async function renderInvitationBlob(
 
   try {
     const blob = await stage.toBlob({ mimeType: 'image/png', pixelRatio: 1 }) as Blob | null;
-    if (!blob) throw new Error('浏览器未能生成 PNG');
+    if (!blob) throw new AppError('errors.renderPng');
     return blob;
   } finally {
     stage.destroy();

@@ -13,6 +13,6 @@ describe('batch import', () => {
   });
 
   it('reports missing required headers', () => {
-    expect(() => parseCsv('name\nAlice', ['name', 'date'])).toThrow('CSV 缺少表头：date');
+    expect(() => parseCsv('name\nAlice', ['name', 'date'])).toThrow('errors.csvMissingHeaders');
   });
 });

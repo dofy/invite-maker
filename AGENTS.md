@@ -1,10 +1,10 @@
-# AGENTS.md — invite-maker
+# AGENTS.md — Tsudoi
 
 > 给 AI 编码助手（Codex / Cursor / Claude 等）的项目上下文。
 
 ## 项目目的
 
-**邀请函生成器**：用户上传底图，在图上拖拽模板文本并调整样式，然后下载单张高清 PNG，或导入 CSV/TXT 批量生成 PNG ZIP。
+**Tsudoi**：通用邀请函生成工具。用户上传底图，在图上拖拽模板文本并调整样式，然后下载单张高清 PNG，或导入 CSV/TXT 批量生成 PNG ZIP。
 
 核心原则：
 
@@ -51,7 +51,7 @@ invite-maker/
 - **序号补零**：`index:N` 的 N 限制为 1–12；不足位数左侧补零，数值超过位数时不截断。
 - **动态值作用域**：批量序号从 1 开始；一次批处理共用基准时间；UUID 每张图片、每个图层独立生成，同层重复引用复用。
 - **预览规则**：导入前数据变量保留原样；导入后默认选第一条，点击或键盘激活数据行可切换预览；画布和单张下载使用当前记录，批量生成处理全部记录。
-- **空画布占位**：未上传时显示 `public/placeholder.svg` 并建立编辑画布，但禁止将占位图作为正式底图导出。
+- **空画布占位**：未上传时从 `public/placeholders/` 内的 18 张深色插画中随机选择（竖版、横版、方图各 6 张）并建立对应比例的编辑画布，但禁止将占位图作为正式底图导出。
 - **坐标系**：图层使用 `xPct` / `yPct`；Konva Stage 内部始终使用底图原始像素，只缩放预览 Stage。
 - **九宫格锚点**：`align` 只控制框内文字对齐；`anchorX` 与 `anchorY` 独立决定坐标锚定的文本框边界。
 - **文本框宽度**：`width` 为原图像素，`null` 表示随内容伸缩；固定宽度自动换行，可通过数值或 Transformer 手柄调整。
@@ -72,7 +72,7 @@ invite-maker/
 pnpm install
 pnpm dev          # http://localhost:5173
 pnpm check        # TypeScript + Vitest + Vite build
-pnpm deploy       # 构建并部署 dist
+pnpm run deploy   # 版本号升至下一个偶数，构建并部署 dist
 ```
 
 ## 技术栈

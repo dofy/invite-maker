@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import {
   DEFAULT_CANVAS_PADDING,
-  PLACEHOLDER_HEIGHT,
-  PLACEHOLDER_WIDTH,
   createTextLayer,
   type BackgroundModel,
   type BatchRecord,
@@ -10,6 +8,7 @@ import {
   type TextLayer,
 } from '../model';
 import { analyzeBindings } from '../lib/template';
+import { selectRandomPlaceholder } from '../lib/placeholders';
 
 interface EditorState {
   canvas: CanvasModel;
@@ -21,7 +20,7 @@ interface EditorState {
   importedSignature: string;
   previewIndex: number;
   batchProgress: number | null;
-  addLayer: () => void;
+  addLayer: (text?: string) => void;
   removeLayer: (id: string) => void;
   selectLayer: (id: string | null) => void;
   updateLayer: (id: string, patch: Partial<TextLayer>) => void;
@@ -34,13 +33,7 @@ interface EditorState {
   setBatchProgress: (progress: number | null) => void;
 }
 
-const placeholder: BackgroundModel = {
-  url: '/placeholder.svg',
-  name: '',
-  naturalWidth: PLACEHOLDER_WIDTH,
-  naturalHeight: PLACEHOLDER_HEIGHT,
-  isPlaceholder: true,
-};
+const placeholder: BackgroundModel = selectRandomPlaceholder();
 
 function invalidateDataWhenBindingsChange(
   previousLayers: TextLayer[],
@@ -54,7 +47,11 @@ function invalidateDataWhenBindingsChange(
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
-  canvas: { width: PLACEHOLDER_WIDTH, height: PLACEHOLDER_HEIGHT, padding: DEFAULT_CANVAS_PADDING },
+  canvas: {
+    width: placeholder.naturalWidth,
+    height: placeholder.naturalHeight,
+    padding: DEFAULT_CANVAS_PADDING,
+  },
   background: placeholder,
   layers: [],
   selectedId: null,
@@ -64,8 +61,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   previewIndex: 0,
   batchProgress: null,
 
-  addLayer: () => set((state) => {
-    const layer = createTextLayer(state.layers.length + 1);
+  addLayer: (text) => set((state) => {
+    const layer = createTextLayer(state.layers.length + 1, text ? { text } : {});
     return { layers: [...state.layers, layer], selectedId: layer.id };
   }),
   removeLayer: (id) => set((state) => {

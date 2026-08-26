@@ -1,13 +1,18 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import Konva from 'konva';
-import { Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
+import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Transformer } from 'react-konva';
 import { useEditorStore } from '../store/editor';
 import type { ResolveContext, } from '../lib/template';
 import { analyzeBindings, resolveTemplateText } from '../lib/template';
 import { applyAnchorOffset, textNodeConfig } from '../lib/render';
-import { backgroundFromFile, releaseBackground } from '../lib/image-file';
-import { notifications } from '@mantine/notifications';
+import {
+  horizontalResizeHandles,
+  reanchorPoint,
+  snapResizeWidth,
+  usesCenteredResize,
+  type HorizontalResizeHandle,
+} from '../lib/text-resize';
 import type { TextLayer } from '../model';
 
 function useHtmlImage(url: string) {
@@ -61,14 +66,41 @@ function CanvasText({
 }: CanvasTextProps) {
   const nodeRef = useRef<Konva.Text>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const anchorMarkerRef = useRef<Konva.Group>(null);
+  const resizeWidthRef = useRef<number | null>(null);
+  const previousAnchorRef = useRef({ x: layer.anchorX, y: layer.anchorY });
   const canvas = useMemo(() => ({ width: canvasWidth, height: canvasHeight, padding: 0 }), [canvasWidth, canvasHeight]);
 
   useLayoutEffect(() => {
     const node = nodeRef.current;
     if (!node) return;
+    const previousAnchor = previousAnchorRef.current;
+    const nextAnchor = { x: layer.anchorX, y: layer.anchorY };
+    let x = canvasWidth * layer.xPct / 100;
+    let y = canvasHeight * layer.yPct / 100;
+
+    if (previousAnchor.x !== nextAnchor.x || previousAnchor.y !== nextAnchor.y) {
+      const nextPoint = reanchorPoint(
+        { x, y },
+        { width: node.width(), height: node.height() },
+        previousAnchor,
+        nextAnchor,
+      );
+      x = nextPoint.x;
+      y = nextPoint.y;
+      node.position({ x, y });
+      previousAnchorRef.current = nextAnchor;
+      useEditorStore.getState().updateLayer(layer.id, {
+        xPct: x / canvasWidth * 100,
+        yPct: y / canvasHeight * 100,
+      });
+    }
+
     applyAnchorOffset(node, layer);
+    anchorMarkerRef.current?.position({ x, y });
+    transformerRef.current?.forceUpdate();
     node.getLayer()?.batchDraw();
-  }, [layer, text]);
+  }, [canvasHeight, canvasWidth, layer, text]);
 
   useLayoutEffect(() => {
     const transformer = transformerRef.current;
@@ -78,21 +110,61 @@ function CanvasText({
     transformer.getLayer()?.batchDraw();
   }, [selected, layer.width]);
 
+  const resizeWithoutStretching = (event?: Konva.KonvaEventObject<Event>) => {
+    const node = nodeRef.current;
+    const transformer = transformerRef.current;
+    if (!node || !transformer) return;
+
+    const calculatedWidth = Math.max(40, Math.min(20_000, node.width() * Math.abs(node.scaleX())));
+    const activeHandle = transformer.getActiveAnchor() as HorizontalResizeHandle | null;
+    const snapDisabled = event?.evt && 'altKey' in event.evt && event.evt.altKey === true;
+    let nextWidth = calculatedWidth;
+
+    if (event && activeHandle && !snapDisabled) {
+      const sceneLayer = node.getLayer();
+      const otherNodes = sceneLayer?.find('.invitation-text').filter((item) => item !== node) ?? [];
+      const otherBounds = otherNodes.map((item) => item.getClientRect({ relativeTo: sceneLayer ?? undefined }));
+      const allTargetsX = [
+        ...targetsX,
+        ...otherBounds.flatMap((bounds) => [bounds.x, bounds.x + bounds.width / 2, bounds.x + bounds.width]),
+      ];
+      const snapped = snapResizeWidth({
+        anchorX: layer.anchorX,
+        anchorPointX: canvasWidth * layer.xPct / 100,
+        width: calculatedWidth,
+        activeHandle,
+        targets: allTargetsX,
+        threshold: SNAP_PX / Math.max(scale, 0.01),
+      });
+      nextWidth = snapped.width;
+      onGuide(snapped.guideX, null);
+    } else {
+      onGuide(null, null);
+    }
+
+    resizeWidthRef.current = nextWidth;
+    node.scale({ x: 1, y: 1 });
+    node.width(nextWidth);
+    node.position({
+      x: canvasWidth * layer.xPct / 100,
+      y: canvasHeight * layer.yPct / 100,
+    });
+    applyAnchorOffset(node, { ...layer, width: nextWidth });
+    transformer.forceUpdate();
+    node.getLayer()?.batchDraw();
+  };
+
   const finishTransform = () => {
     const node = nodeRef.current;
     const transformer = transformerRef.current;
     if (!node || !transformer) return;
-    const activeAnchor = transformer.getActiveAnchor() ?? '';
-    const scaleX = Math.abs(node.scaleX());
-    const scaleY = Math.abs(node.scaleY());
-    node.scale({ x: 1, y: 1 });
-    if (activeAnchor.includes('middle') && layer.width !== null) {
-      onMove(node.x(), node.y());
-      useEditorStore.getState().updateLayer(layer.id, { width: Math.max(40, layer.width * scaleX) });
-    } else {
-      const factor = Math.max(0.2, Math.min(8, (scaleX + scaleY) / 2));
-      useEditorStore.getState().updateLayer(layer.id, { size: Math.max(8, Math.min(2_000, layer.size * factor)) });
-    }
+    resizeWithoutStretching();
+    const nextWidth = Math.round(resizeWidthRef.current ?? node.width());
+    resizeWidthRef.current = null;
+    node.width(nextWidth);
+    applyAnchorOffset(node, { ...layer, width: nextWidth });
+    onGuide(null, null);
+    useEditorStore.getState().updateLayer(layer.id, { width: nextWidth });
   };
 
   return (
@@ -104,22 +176,28 @@ function CanvasText({
         onDblClick={onSelect}
         onDragMove={(event) => {
           const node = event.target as Konva.Text;
-          if (event.evt.altKey) { onGuide(null, null); return; }
-          const threshold = SNAP_PX / Math.max(scale, 0.01);
-          const sceneLayer = node.getLayer();
-          const ownBounds = node.getClientRect({ relativeTo: sceneLayer ?? undefined });
-          const otherNodes = sceneLayer?.find('.invitation-text').filter((item) => item !== node) ?? [];
-          const otherBounds = otherNodes.map((item) => item.getClientRect({ relativeTo: sceneLayer ?? undefined }));
-          const allTargetsX = [...targetsX, ...otherBounds.flatMap((bounds) => [bounds.x, bounds.x + bounds.width / 2, bounds.x + bounds.width])];
-          const allTargetsY = [...targetsY, ...otherBounds.flatMap((bounds) => [bounds.y, bounds.y + bounds.height / 2, bounds.y + bounds.height])];
-          const snapX = nearestSnap([ownBounds.x, ownBounds.x + ownBounds.width / 2, ownBounds.x + ownBounds.width], allTargetsX, threshold);
-          const snapY = nearestSnap([ownBounds.y, ownBounds.y + ownBounds.height / 2, ownBounds.y + ownBounds.height], allTargetsY, threshold);
-          if (snapX) node.x(node.x() + snapX.delta);
-          if (snapY) node.y(node.y() + snapY.delta);
-          onGuide(snapX?.target ?? null, snapY?.target ?? null);
+          if (event.evt.altKey) {
+            onGuide(null, null);
+          } else {
+            const threshold = SNAP_PX / Math.max(scale, 0.01);
+            const sceneLayer = node.getLayer();
+            const ownBounds = node.getClientRect({ relativeTo: sceneLayer ?? undefined });
+            const otherNodes = sceneLayer?.find('.invitation-text').filter((item) => item !== node) ?? [];
+            const otherBounds = otherNodes.map((item) => item.getClientRect({ relativeTo: sceneLayer ?? undefined }));
+            const allTargetsX = [...targetsX, ...otherBounds.flatMap((bounds) => [bounds.x, bounds.x + bounds.width / 2, bounds.x + bounds.width])];
+            const allTargetsY = [...targetsY, ...otherBounds.flatMap((bounds) => [bounds.y, bounds.y + bounds.height / 2, bounds.y + bounds.height])];
+            const snapX = nearestSnap([ownBounds.x, ownBounds.x + ownBounds.width / 2, ownBounds.x + ownBounds.width], allTargetsX, threshold);
+            const snapY = nearestSnap([ownBounds.y, ownBounds.y + ownBounds.height / 2, ownBounds.y + ownBounds.height], allTargetsY, threshold);
+            if (snapX) node.x(node.x() + snapX.delta);
+            if (snapY) node.y(node.y() + snapY.delta);
+            onGuide(snapX?.target ?? null, snapY?.target ?? null);
+          }
+          anchorMarkerRef.current?.position({ x: node.x(), y: node.y() });
+          node.getLayer()?.batchDraw();
         }}
         onDragEnd={(event) => {
           onGuide(null, null);
+          anchorMarkerRef.current?.position({ x: event.target.x(), y: event.target.y() });
           onMove(event.target.x(), event.target.y());
         }}
         shadowColor={selected ? '#4a9eff' : undefined}
@@ -131,19 +209,42 @@ function CanvasText({
           ref={transformerRef}
           rotateEnabled={false}
           flipEnabled={false}
-          keepRatio={layer.width === null}
-          enabledAnchors={layer.width === null
-            ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
-            : ['middle-left', 'middle-right', 'top-left', 'top-right', 'bottom-left', 'bottom-right']}
-          anchorSize={12 / Math.max(scale, 0.01)}
-          borderStroke="#4a9eff"
-          borderStrokeWidth={1.5 / Math.max(scale, 0.01)}
-          anchorFill="#e7f2ff"
-          anchorStroke="#4a9eff"
-          anchorStrokeWidth={1.5 / Math.max(scale, 0.01)}
+          keepRatio={false}
+          centeredScaling={usesCenteredResize(layer.anchorX)}
+          enabledAnchors={horizontalResizeHandles(layer.anchorX)}
+          anchorSize={8 / Math.max(scale, 0.01)}
+          anchorCornerRadius={4 / Math.max(scale, 0.01)}
+          borderStroke="#5f9fd9"
+          borderStrokeWidth={1 / Math.max(scale, 0.01)}
+          anchorFill="#dceeff"
+          anchorStroke="#4f9bd4"
+          anchorStrokeWidth={1 / Math.max(scale, 0.01)}
           boundBoxFunc={(oldBox, newBox) => newBox.width < 40 ? oldBox : newBox}
+          onTransformStart={() => { resizeWidthRef.current = null; onGuide(null, null); }}
+          onTransform={resizeWithoutStretching}
           onTransformEnd={finishTransform}
         />
+      ) : null}
+      {selected ? (
+        <Group
+          ref={anchorMarkerRef}
+          x={canvasWidth * layer.xPct / 100}
+          y={canvasHeight * layer.yPct / 100}
+          listening={false}
+        >
+          <Circle
+            radius={4.5 / Math.max(scale, 0.01)}
+            fill="#17120c"
+            stroke="#efcc8e"
+            strokeWidth={1.7 / Math.max(scale, 0.01)}
+            listening={false}
+          />
+          <Circle
+            radius={1.5 / Math.max(scale, 0.01)}
+            fill="#efcc8e"
+            listening={false}
+          />
+        </Group>
       ) : null}
     </>
   );
@@ -160,7 +261,6 @@ export function EditorCanvas() {
   const previewIndex = useEditorStore((state) => state.previewIndex);
   const selectLayer = useEditorStore((state) => state.selectLayer);
   const updateLayer = useEditorStore((state) => state.updateLayer);
-  const setBackground = useEditorStore((state) => state.setBackground);
   const image = useHtmlImage(background.url);
   const [guide, setGuide] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const previewUuids = useRef(new Map<number, Map<string, string>>());
@@ -188,23 +288,7 @@ export function EditorCanvas() {
   const baseTargetsY = [0, canvas.padding, canvas.height / 2, canvas.height - canvas.padding, canvas.height];
 
   return (
-    <main
-      className="canvas-shell"
-      ref={ref}
-      onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }}
-      onDrop={(event) => {
-        event.preventDefault();
-        const file = event.dataTransfer.files[0];
-        if (!file) return;
-        void backgroundFromFile(file).then((next) => {
-          releaseBackground(background);
-          setBackground(next);
-          notifications.show({ color: 'green', title: '底图已载入', message: `${next.naturalWidth} × ${next.naturalHeight}px` });
-        }).catch((error: unknown) => notifications.show({
-          color: 'red', title: '底图载入失败', message: error instanceof Error ? error.message : '请选择有效图片',
-        }));
-      }}
-    >
+    <main className="canvas-shell" ref={ref}>
       <div className="canvas-frame" style={{ width: stageWidth, height: stageHeight }}>
         <Stage
           width={stageWidth}
@@ -254,11 +338,6 @@ export function EditorCanvas() {
             ) : null}
           </Layer>
         </Stage>
-        {background.isPlaceholder ? (
-          <button className="placeholder-action" type="button" onClick={() => document.getElementById('background-file')?.click()}>
-            点击上传邀请函底图
-          </button>
-        ) : null}
       </div>
     </main>
   );

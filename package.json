@@ -1,8 +1,16 @@
 {
   "name": "invite-maker",
-  "version": "1.0.0",
+  "version": "2.3.6",
   "private": true,
-  "description": "纯前端邀请函编辑器：占位符批量填充、PNG 合成与 ZIP 下载",
+  "description": "Tsudoi is a universal visual invitation design and batch image generation tool with CSV and TXT data filling",
+  "homepage": "https://tsudoi.yahaha.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dofy/invite-maker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dofy/invite-maker/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +18,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "check": "tsc -b && vitest run && vite build",
+    "version:deploy": "node scripts/bump-deploy-version.mjs",
+    "predeploy": "pnpm version:deploy",
     "deploy": "pnpm build && wrangler pages deploy dist"
   },
   "devDependencies": {
@@ -22,7 +32,9 @@
     "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
+    "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.11",
+    "workbox-window": "^7.4.1",
     "wrangler": "^4.125.0"
   },
   "pnpm": {
@@ -36,11 +48,13 @@
     "@mantine/hooks": "^9.5.2",
     "@mantine/notifications": "^9.5.2",
     "@tabler/icons-react": "^3.46.0",
+    "i18next": "^26.4.0",
     "jszip": "^3.10.1",
     "konva": "^10.3.1",
     "papaparse": "^5.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.12",
     "react-konva": "^19.2.5",
     "zod": "^4.4.3",
     "zustand": "^5.0.15"

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>邀请函生成器</title>
+  <title>Tsudoi</title>
   <g stroke="#E7B84B" stroke-linecap="round" stroke-linejoin="round">
     <path d="M7 28 32 7l25 21" fill="none" stroke-width="4.5"/>
     <rect x="14" y="10" width="36" height="35" rx="4" fill="#FFF7DF" stroke-width="4"/>

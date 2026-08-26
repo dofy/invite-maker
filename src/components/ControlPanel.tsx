@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Accordion,
   ActionIcon,
   Button,
   ColorInput,
   Group,
+  Menu,
   Modal,
   NumberInput,
   Progress,
@@ -18,16 +19,22 @@ import {
   TextInput,
   Textarea,
   Tooltip,
+  useComputedColorScheme,
+  useMantineColorScheme,
+  type MantineColorScheme,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
   IconAlignCenter,
   IconAlignLeft,
   IconAlignRight,
+  IconBrandGithub,
   IconCalendar,
+  IconCheck,
   IconClock,
   IconCode,
   IconDatabase,
+  IconDeviceDesktop,
   IconDownload,
   IconFileDescription,
   IconFileImport,
@@ -35,58 +42,85 @@ import {
   IconFingerprint,
   IconHash,
   IconImageInPicture,
+  IconLanguage,
   IconStack,
   IconPhotoUp,
   IconPlus,
+  IconMoon,
+  IconSun,
   IconTableColumn,
   IconTrash,
   IconTypography,
 } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { AnchorX, AnchorY, HorizontalAlign, TextLayer } from '../model';
 import { analyzeBindings } from '../lib/template';
 import { importDataFile } from '../lib/data';
 import { buildTemplate, parseTemplateFile } from '../lib/template-json';
 import { downloadBlob, renderBatchZip, renderInvitationBlob } from '../lib/render';
 import { backgroundFromFile, releaseBackground } from '../lib/image-file';
+import { formatCopyright } from '../lib/copyright';
+import { AppError, translateError } from '../lib/app-error';
+import { resolveLanguage, translate } from '../i18n';
+import type { AppLanguage, TranslationKey } from '../i18n/resources';
 import { useEditorStore } from '../store/editor';
+import packageJson from '../../package.json';
 
-const FONT_OPTIONS = [
-  { group: '系统字体 · System', items: [
-    { value: '"PingFang SC","Microsoft YaHei",sans-serif', label: '系统黑体' },
-    { value: '"Songti SC","SimSun",serif', label: '系统宋体' },
-    { value: '"Kaiti SC","KaiTi",serif', label: '系统楷体' },
+const GITHUB_URL = 'https://github.com/dofy/invite-maker';
+
+function fontOptions(t: TFunction) {
+  return [
+  { group: t('editor.fontGroupSystem'), items: [
+    { value: '"PingFang SC","Microsoft YaHei",sans-serif', label: t('editor.fontSystemSans') },
+    { value: '"Songti SC","SimSun",serif', label: t('editor.fontSystemSerif') },
+    { value: '"Kaiti SC","KaiTi",serif', label: t('editor.fontSystemKai') },
     { value: 'Georgia,serif', label: 'Georgia' },
     { value: '"Helvetica Neue",Arial,sans-serif', label: 'Helvetica' },
-    { value: '"Brush Script MT",cursive', label: '系统手写体' },
+    { value: '"Brush Script MT",cursive', label: t('editor.fontSystemScript') },
   ] },
-  { group: '中文 · Chinese', items: [
-    { value: '"Noto Sans SC","PingFang SC",sans-serif', label: 'Noto Sans SC · 思源黑体' },
-    { value: '"Noto Serif SC","Songti SC",serif', label: 'Noto Serif SC · 简体宋体' },
-    { value: '"Noto Serif TC","Songti TC",serif', label: 'Noto Serif TC · 繁体宋体' },
-    { value: '"Ma Shan Zheng","Kaiti SC",cursive', label: 'Ma Shan Zheng · 毛笔字' },
-    { value: '"ZCOOL XiaoWei","Songti SC",serif', label: 'ZCOOL XiaoWei · 小薇体' },
+  { group: t('editor.fontGroupChinese'), items: [
+    { value: '"Noto Sans SC","PingFang SC",sans-serif', label: 'Noto Sans SC' },
+    { value: '"Noto Serif SC","Songti SC",serif', label: 'Noto Serif SC' },
+    { value: '"Noto Serif TC","Songti TC",serif', label: 'Noto Serif TC' },
+    { value: '"Ma Shan Zheng","Kaiti SC",cursive', label: 'Ma Shan Zheng' },
+    { value: '"ZCOOL XiaoWei","Songti SC",serif', label: 'ZCOOL XiaoWei' },
   ] },
-  { group: 'English · Latin', items: [
-    { value: '"Great Vibes","Brush Script MT",cursive', label: 'Great Vibes · 邀请函花体' },
-    { value: '"Playfair Display",Georgia,serif', label: 'Playfair Display · 优雅衬线' },
-    { value: '"Cormorant Garamond",Garamond,serif', label: 'Cormorant Garamond · 古典衬线' },
+  { group: t('editor.fontGroupLatin'), items: [
+    { value: '"Great Vibes","Brush Script MT",cursive', label: `Great Vibes · ${t('editor.fontGreatVibes')}` },
+    { value: '"Playfair Display",Georgia,serif', label: `Playfair Display · ${t('editor.fontPlayfair')}` },
+    { value: '"Cormorant Garamond",Garamond,serif', label: `Cormorant Garamond · ${t('editor.fontCormorant')}` },
   ] },
-  { group: '日本語 · Japanese', items: [
-    { value: '"Noto Serif JP","Yu Mincho",serif', label: 'Noto Serif JP · 日本明朝' },
-    { value: '"Shippori Mincho","Yu Mincho",serif', label: 'Shippori Mincho · しっぽり明朝' },
+  { group: t('editor.fontGroupJapanese'), items: [
+    { value: '"Noto Serif JP","Yu Mincho",serif', label: 'Noto Serif JP' },
+    { value: '"Shippori Mincho","Yu Mincho",serif', label: 'Shippori Mincho' },
   ] },
-  { group: '한국어 · Korean', items: [
-    { value: '"Noto Serif KR","AppleMyungjo",serif', label: 'Noto Serif KR · 한국 명조' },
-    { value: '"Gowun Batang","AppleMyungjo",serif', label: 'Gowun Batang · 고운바탕' },
+  { group: t('editor.fontGroupKorean'), items: [
+    { value: '"Noto Serif KR","AppleMyungjo",serif', label: 'Noto Serif KR' },
+    { value: '"Gowun Batang","AppleMyungjo",serif', label: 'Gowun Batang' },
   ] },
-];
+  ];
+}
 
-const TOKENS = [
-  { value: '{{txt}}', label: 'TXT 数据', icon: IconFileDescription },
-  { value: '{{date}}', label: '当前日期', icon: IconCalendar },
-  { value: '{{time}}', label: '当前时间', icon: IconClock },
-  { value: '{{datetime}}', label: '日期时间', icon: IconCalendar },
-  { value: '{{uuid}}', label: '自动 UUID', icon: IconFingerprint },
+function tokenOptions(t: TFunction) {
+  return [
+    { value: '{{txt}}', label: t('editor.tokenTxt'), icon: IconFileDescription },
+    { value: '{{date}}', label: t('editor.tokenDate'), icon: IconCalendar },
+    { value: '{{time}}', label: t('editor.tokenTime'), icon: IconClock },
+    { value: '{{datetime}}', label: t('editor.tokenDateTime'), icon: IconCalendar },
+    { value: '{{uuid}}', label: t('editor.tokenUuid'), icon: IconFingerprint },
+  ];
+}
+
+const LANGUAGE_OPTIONS: Array<{ value: AppLanguage; key: TranslationKey }> = [
+  { value: 'zh-CN', key: 'language.zhCN' },
+  { value: 'zh-TW', key: 'language.zhTW' },
+  { value: 'en', key: 'language.en' },
+  { value: 'de', key: 'language.de' },
+  { value: 'ja', key: 'language.ja' },
+  { value: 'ko', key: 'language.ko' },
+  { value: 'es', key: 'language.es' },
+  { value: 'fr', key: 'language.fr' },
 ];
 
 function SectionTitle({ icon: Icon, children }: { icon: typeof IconImageInPicture; children: React.ReactNode }) {
@@ -97,11 +131,100 @@ function Helper({ children }: { children: React.ReactNode }) {
   return <Text className="helper" size="xs">{children}</Text>;
 }
 
+function LanguagePicker() {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = resolveLanguage(i18n.resolvedLanguage) ?? 'en';
+
+  useEffect(() => {
+    document.documentElement.lang = currentLanguage;
+    document.title = t('meta.title');
+    document.querySelector<HTMLMetaElement>('meta[name="description"]')
+      ?.setAttribute('content', t('meta.description'));
+  }, [currentLanguage, t]);
+
+  return (
+    <Menu position="bottom-end" width={190} withinPortal>
+      <Menu.Target>
+        <ActionIcon
+          className="language-picker"
+          variant="default"
+          radius="xl"
+          aria-label={t('language.label')}
+          title={t('language.label')}
+        >
+          <IconLanguage size={16} stroke={1.8} />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Label>{t('language.label')}</Menu.Label>
+        {LANGUAGE_OPTIONS.map((option) => (
+          <Menu.Item
+            key={option.value}
+            rightSection={option.value === currentLanguage ? <IconCheck size={14} /> : null}
+            onClick={() => void i18n.changeLanguage(option.value)}
+          >
+            {t(option.key)}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+
+function ThemePicker() {
+  const { t } = useTranslation();
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
+  const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: false });
+
+  useEffect(() => {
+    document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute('content', computedColorScheme === 'light' ? '#e4e8ec' : '#0c0e12');
+  }, [computedColorScheme]);
+
+  const option = (label: string, Icon: typeof IconSun) => (
+    <span className="theme-option" title={label}>
+      <Icon size={14} stroke={1.8} aria-hidden="true" />
+      <span className="visually-hidden">{label}</span>
+    </span>
+  );
+
+  return (
+    <SegmentedControl<MantineColorScheme>
+      className="theme-picker"
+      size="xs"
+      radius="xl"
+      aria-label={t('theme.label')}
+      value={colorScheme}
+      onChange={setColorScheme}
+      data={[
+        { value: 'auto', label: option(t('theme.system'), IconDeviceDesktop) },
+        { value: 'light', label: option(t('theme.light'), IconSun) },
+        { value: 'dark', label: option(t('theme.dark'), IconMoon) },
+      ]}
+    />
+  );
+}
+
+export function AppHeader() {
+  const { t } = useTranslation();
+
+  return (
+    <header className="app-title">
+      <IconImageInPicture size={24} stroke={1.6} />
+      <div className="app-brand"><h1>{t('app.name')}</h1><small>{t('app.subtitle')}</small></div>
+      <div className="app-title-controls"><LanguagePicker /><ThemePicker /></div>
+    </header>
+  );
+}
+
 function AnchorPicker({ layer, update }: { layer: TextLayer; update: (patch: Partial<TextLayer>) => void }) {
+  const { t } = useTranslation();
   const xs: AnchorX[] = ['left', 'center', 'right'];
   const ys: AnchorY[] = ['top', 'center', 'bottom'];
+  const horizontalLabel = (value: AnchorX) => t(value === 'left' ? 'editor.anchorLeft' : value === 'right' ? 'editor.anchorRight' : 'editor.anchorCenter');
+  const verticalLabel = (value: AnchorY) => t(value === 'top' ? 'editor.anchorTop' : value === 'bottom' ? 'editor.anchorBottom' : 'editor.anchorCenter');
   return (
-    <div className="anchor-picker" role="radiogroup" aria-label="文本框锚点">
+    <div className="anchor-picker" role="radiogroup" aria-label={t('editor.anchor')}>
       {ys.flatMap((y) => xs.map((x) => {
         const active = layer.anchorX === x && layer.anchorY === y;
         return (
@@ -111,7 +234,7 @@ function AnchorPicker({ layer, update }: { layer: TextLayer; update: (patch: Par
             className={active ? 'anchor-button active' : 'anchor-button'}
             role="radio"
             aria-checked={active}
-            aria-label={`${x}-${y} 锚点`}
+            aria-label={translate(t, 'editor.anchorAria', { horizontal: horizontalLabel(x), vertical: verticalLabel(y) })}
             onClick={() => update({ anchorX: x, anchorY: y })}
           >
             <span className={`anchor-symbol x-${x} y-${y}`} />
@@ -123,6 +246,7 @@ function AnchorPicker({ layer, update }: { layer: TextLayer; update: (patch: Par
 }
 
 function LayerEditor({ layer }: { layer: TextLayer }) {
+  const { t } = useTranslation();
   const updateLayer = useEditorStore((state) => state.updateLayer);
   const headers = useEditorStore((state) => state.headers);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -144,7 +268,7 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
 
   return (
     <section className="panel-section">
-      <SectionTitle icon={IconTypography}>3. 编辑选中文本</SectionTitle>
+      <SectionTitle icon={IconTypography}>{t('section.editor')}</SectionTitle>
       <Textarea
         ref={textareaRef}
         value={layer.text}
@@ -152,12 +276,12 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
         autosize
         minRows={2}
         maxRows={8}
-        aria-label="模板文字"
-        placeholder="输入模板文字，支持多行和变量"
+        aria-label={t('editor.textAria')}
+        placeholder={t('editor.textPlaceholder')}
       />
-      <Helper>点击插入变量，可与普通文字自由拼接：</Helper>
+      <Helper>{t('editor.tokenHelp')}</Helper>
       <div className="token-grid">
-        {TOKENS.map(({ value, label, icon: Icon }) => (
+        {tokenOptions(t).map(({ value, label, icon: Icon }) => (
           <Button key={value} variant="subtle" size="compact-sm" leftSection={<Icon size={14} />} onClick={() => insertToken(value)}>
             {label}
           </Button>
@@ -168,13 +292,13 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
           value={csvField}
           onChange={(event) => setCsvField(event.currentTarget.value)}
           list={`csv-headers-${layer.id}`}
-          placeholder="CSV 表头，如 name"
-          aria-label="CSV 表头"
+          placeholder={t('editor.csvPlaceholder')}
+          aria-label={t('editor.csvAria')}
           className="grow-control"
         />
         <datalist id={`csv-headers-${layer.id}`}>{headers.map((header) => <option key={header} value={header} />)}</datalist>
-        <Tooltip label="插入 CSV 字段">
-          <ActionIcon size="lg" variant="light" aria-label="插入 CSV 字段" onClick={() => csvField.trim() && insertToken(`{{csv.${csvField.trim()}}}`)}>
+        <Tooltip label={t('editor.csvInsert')}>
+          <ActionIcon size="lg" variant="light" aria-label={t('editor.csvInsert')} onClick={() => csvField.trim() && insertToken(`{{csv.${csvField.trim()}}}`)}>
             <IconTableColumn size={18} />
           </ActionIcon>
         </Tooltip>
@@ -185,67 +309,76 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
           onChange={setIndexWidth}
           min={1}
           max={12}
-          label="序号补零位数"
+          label={t('editor.indexDigits')}
           className="grow-control"
         />
-        <Tooltip label="插入补零序号">
-          <ActionIcon mt={25} size="lg" variant="light" aria-label="插入补零序号" onClick={() => insertToken(`{{index:${Math.max(1, Math.min(12, Number(indexWidth) || 1))}}}`)}>
+        <Tooltip label={t('editor.indexInsert')}>
+          <ActionIcon mt={25} size="lg" variant="light" aria-label={t('editor.indexInsert')} onClick={() => insertToken(`{{index:${Math.max(1, Math.min(12, Number(indexWidth) || 1))}}}`)}>
             <IconHash size={18} />
           </ActionIcon>
         </Tooltip>
       </Group>
-      <Helper>示例：尊敬的 {'{{csv.name}}'}，日期 {'{{date}}'}，编号 {'{{index:3}}'}</Helper>
+      <Helper>{t('editor.example')}</Helper>
 
-      <Select label="字体" value={layer.font} onChange={(font) => font && update({ font })} data={FONT_OPTIONS} searchable />
-      <Helper>网络字体无法加载时，会自动使用同语言的系统字体。</Helper>
+      <Select label={t('editor.font')} value={layer.font} onChange={(font) => font && update({ font })} data={fontOptions(t)} searchable />
+      <Helper>{t('editor.fontFallback')}</Helper>
 
-      <div className="form-row slider-row">
-        <Text component="label" size="sm" fw={600}>字号</Text>
-        <Slider min={10} max={200} value={layer.size} onChange={(size) => update({ size })} aria-label="字号" />
-        <span className="numeric-value">{Math.round(layer.size)}</span>
-      </div>
+      <NumberInput
+        label={t('editor.fontSize')}
+        suffix=" px"
+        min={8}
+        max={2_000}
+        step={1}
+        hideControls
+        clampBehavior="strict"
+        value={Math.round(layer.size)}
+        onChange={(value) => {
+          const size = Number(value);
+          if (Number.isFinite(size) && size >= 8 && size <= 2_000) update({ size });
+        }}
+      />
 
       <Select
-        label="字重"
+        label={t('editor.fontWeight')}
         value={layer.weight}
         onChange={(weight) => weight && update({ weight })}
-        data={[{ value: '300', label: '细' }, { value: '400', label: '常规' }, { value: '600', label: '中粗' }, { value: '700', label: '粗' }]}
+        data={[{ value: '300', label: t('editor.weightLight') }, { value: '400', label: t('editor.weightRegular') }, { value: '600', label: t('editor.weightSemibold') }, { value: '700', label: t('editor.weightBold') }]}
       />
 
       <div className="paired-controls">
-        <ColorInput label="颜色" value={layer.color} onChange={(color) => update({ color })} format="hex" />
+        <ColorInput label={t('editor.color')} value={layer.color} onChange={(color) => update({ color })} format="hex" />
         <div>
-          <Text component="label" size="sm" fw={600}>对齐</Text>
+          <Text component="label" size="sm" fw={600}>{t('editor.alignment')}</Text>
           <SegmentedControl
             fullWidth
             value={layer.align}
             onChange={(align) => update({ align: align as HorizontalAlign })}
-            aria-label="文字对齐"
+            aria-label={t('editor.alignmentAria')}
             data={[
-              { value: 'left', label: <IconAlignLeft size={17} aria-label="左对齐" /> },
-              { value: 'center', label: <IconAlignCenter size={17} aria-label="居中对齐" /> },
-              { value: 'right', label: <IconAlignRight size={17} aria-label="右对齐" /> },
+              { value: 'left', label: <IconAlignLeft size={17} aria-label={t('editor.alignLeft')} /> },
+              { value: 'center', label: <IconAlignCenter size={17} aria-label={t('editor.alignCenter')} /> },
+              { value: 'right', label: <IconAlignRight size={17} aria-label={t('editor.alignRight')} /> },
             ]}
           />
         </div>
       </div>
 
       <div className="labeled-control">
-        <Text component="label" size="sm" fw={600}>锚点</Text>
+        <Text component="label" size="sm" fw={600}>{t('editor.anchor')}</Text>
         <AnchorPicker layer={layer} update={update} />
       </div>
-      <Helper>锚点固定文本框坐标；换行后内容沿锚点方向扩展。</Helper>
+      <Helper>{t('editor.anchorHelp')}</Helper>
 
       <div className="width-row">
         <Select
-          label="宽度"
+          label={t('editor.width')}
           value={layer.width === null ? 'auto' : 'fixed'}
           onChange={(mode) => update({ width: mode === 'fixed' ? layer.width ?? 320 : null })}
-          data={[{ value: 'auto', label: '随内容' }, { value: 'fixed', label: '固定宽度' }]}
+          data={[{ value: 'auto', label: t('editor.widthAuto') }, { value: 'fixed', label: t('editor.widthFixed') }]}
           allowDeselect={false}
         />
         <NumberInput
-          label="像素"
+          label={t('editor.pixels')}
           suffix=" px"
           min={40}
           max={20_000}
@@ -254,19 +387,19 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
           onChange={(value) => update({ width: Math.max(40, Number(value) || 320) })}
         />
       </div>
-      <Helper>固定宽度时自动换行，也可拖动画布文本框两侧的手柄调整。</Helper>
+      <Helper>{t('editor.resizeHelp')}</Helper>
 
       <div className="form-row slider-row">
-        <Text component="label" size="sm" fw={600}>字距</Text>
-        <Slider min={-5} max={30} value={layer.spacing} onChange={(spacing) => update({ spacing })} aria-label="字距" />
+        <Text component="label" size="sm" fw={600}>{t('editor.letterSpacing')}</Text>
+        <Slider min={-5} max={30} value={layer.spacing} onChange={(spacing) => update({ spacing })} aria-label={t('editor.letterSpacing')} />
         <span className="numeric-value">{layer.spacing}</span>
       </div>
 
       <div className="stroke-row">
-        <ColorInput label="描边" value={layer.stroke} onChange={(stroke) => update({ stroke })} format="hex" />
+        <ColorInput label={t('editor.stroke')} value={layer.stroke} onChange={(stroke) => update({ stroke })} format="hex" />
         <div>
-          <Text component="label" size="sm" fw={600}>粗细</Text>
-          <Slider min={0} max={10} value={layer.strokeW} onChange={(strokeW) => update({ strokeW })} aria-label="描边粗细" />
+          <Text component="label" size="sm" fw={600}>{t('editor.strokeWidth')}</Text>
+          <Slider min={0} max={10} value={layer.strokeW} onChange={(strokeW) => update({ strokeW })} aria-label={`${t('editor.stroke')} ${t('editor.strokeWidth')}`} />
         </div>
         <span className="numeric-value">{layer.strokeW}</span>
       </div>
@@ -275,6 +408,7 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
 }
 
 export function ControlPanel() {
+  const { t } = useTranslation();
   const canvas = useEditorStore((state) => state.canvas);
   const background = useEditorStore((state) => state.background);
   const layers = useEditorStore((state) => state.layers);
@@ -300,7 +434,7 @@ export function ControlPanel() {
   const [pendingTemplate, setPendingTemplate] = useState<ReturnType<typeof parseTemplateFile> | null>(null);
 
   const notifyError = (error: unknown) => notifications.show({
-    color: 'red', title: '操作未完成', message: error instanceof Error ? error.message : '发生未知错误',
+    color: 'red', title: t('toast.errorTitle'), message: translateError(error, t),
   });
 
   const uploadBackground = async (file: File | null) => {
@@ -309,7 +443,7 @@ export function ControlPanel() {
       const next = await backgroundFromFile(file);
       releaseBackground(background);
       setBackground(next);
-      notifications.show({ color: 'green', title: '底图已载入', message: `${next.naturalWidth} × ${next.naturalHeight}px` });
+      notifications.show({ color: 'green', title: t('toast.backgroundLoaded'), message: `${next.naturalWidth} × ${next.naturalHeight}px` });
     } catch (error) { notifyError(error); }
   };
 
@@ -318,7 +452,7 @@ export function ControlPanel() {
     try {
       const result = await importDataFile(file, binding);
       setImportedData(result.records, result.headers, binding.signature);
-      notifications.show({ color: 'green', title: '数据已导入', message: `共 ${result.records.length} 条记录` });
+      notifications.show({ color: 'green', title: t('toast.dataImported'), message: translate(t, 'toast.dataImportedMessage', { count: result.records.length }) });
     } catch (error) { notifyError(error); }
   };
 
@@ -330,22 +464,22 @@ export function ControlPanel() {
   });
 
   const exportCurrent = async () => {
-    if (background.isPlaceholder) { notifyError(new Error('请先上传正式底图')); return; }
+    if (background.isPlaceholder) { notifyError(new AppError('errors.uploadBackgroundFirst')); return; }
     try {
       const blob = await renderInvitationBlob(background.url, canvas, layers, currentContext());
       downloadBlob(blob, 'invitation.png');
-      notifications.show({ color: 'green', title: '图片已生成', message: 'PNG 已保存到下载目录' });
+      notifications.show({ color: 'green', title: t('toast.imageGenerated'), message: t('toast.imageSaved') });
     } catch (error) { notifyError(error); }
   };
 
   const exportBatch = async () => {
-    if (background.isPlaceholder) { notifyError(new Error('请先上传正式底图')); return; }
-    if (!importedIsCurrent) { notifyError(new Error('请导入与当前变量匹配的数据')); return; }
+    if (background.isPlaceholder) { notifyError(new AppError('errors.uploadBackgroundFirst')); return; }
+    if (!importedIsCurrent) { notifyError(new AppError('errors.dataMismatch')); return; }
     setBatchProgress(0);
     try {
       const zip = await renderBatchZip(background.url, canvas, layers, records, setBatchProgress);
       downloadBlob(zip, `invitations-${Date.now()}.zip`);
-      notifications.show({ color: 'green', title: '批量生成完成', message: `${records.length} 张图片已打包下载` });
+      notifications.show({ color: 'green', title: t('toast.batchComplete'), message: translate(t, 'toast.batchSaved', { count: records.length }) });
     } catch (error) { notifyError(error); }
     finally { setBatchProgress(null); }
   };
@@ -362,39 +496,35 @@ export function ControlPanel() {
   const exportTemplate = () => {
     const blob = new Blob([JSON.stringify(buildTemplate(canvas, layers), null, 2)], { type: 'application/json' });
     downloadBlob(blob, 'invitation-template.json');
-    notifications.show({ color: 'green', title: '模板已导出', message: '模板不包含底图和导入数据' });
+    notifications.show({ color: 'green', title: t('toast.templateExported'), message: t('toast.templateExportedMessage') });
   };
 
-  const importStatus = binding.mode === 'conflict' ? 'TXT 与 CSV 变量不能混用'
-    : binding.mode === 'none' ? '插入 {{txt}} 或 {{csv.表头}} 后可导入数据'
-      : importedIsCurrent ? `已导入 ${records.length} 条${binding.mode.toUpperCase()} 数据`
-        : `等待导入 ${binding.mode.toUpperCase()} 文件`;
+  const importStatus = binding.mode === 'conflict' ? t('data.conflict')
+    : binding.mode === 'none' ? t('data.none')
+      : importedIsCurrent ? translate(t, 'data.imported', { count: records.length, type: binding.mode.toUpperCase() })
+        : translate(t, 'data.waiting', { type: binding.mode.toUpperCase() });
 
   return (
     <aside className="control-panel">
-      <header className="app-title">
-        <IconImageInPicture size={24} stroke={1.6} />
-        <div><strong>邀请函生成器</strong><small>Invitation Atelier</small></div>
-      </header>
-
+      <div className="control-panel-scroll">
       <section className="panel-section">
-        <SectionTitle icon={IconImageInPicture}>1. 底图</SectionTitle>
+        <SectionTitle icon={IconImageInPicture}>{t('section.background')}</SectionTitle>
         <Button component="label" variant="light" leftSection={<IconPhotoUp size={17} />} fullWidth>
-          点击或拖拽上传图片
+          {t('background.upload')}
           <input id="background-file" hidden type="file" accept="image/*" onChange={(event) => void uploadBackground(event.currentTarget.files?.[0] ?? null)} />
         </Button>
-        <NumberInput label="安全内边距" suffix=" px" min={0} max={Math.floor(Math.min(canvas.width, canvas.height) / 2)} value={canvas.padding} onChange={(value) => setPadding(Number(value) || 0)} />
-        <Helper>拖动文字时会吸附画布边缘、中心、安全区及其他文本；按住 Alt 可临时关闭吸附。</Helper>
+        <NumberInput label={t('background.padding')} suffix=" px" min={0} max={Math.floor(Math.min(canvas.width, canvas.height) / 2)} value={canvas.padding} onChange={(value) => setPadding(Number(value) || 0)} />
+        <Helper>{t('background.helper')}</Helper>
       </section>
 
       <section className="panel-section">
-        <SectionTitle icon={IconStack}>2. 文本图层</SectionTitle>
-        <Button leftSection={<IconPlus size={17} />} onClick={addLayer}>添加文本</Button>
+        <SectionTitle icon={IconStack}>{t('section.layers')}</SectionTitle>
+        <Button leftSection={<IconPlus size={17} />} onClick={() => addLayer(t('layers.defaultText'))}>{t('layers.add')}</Button>
         <Stack gap={6}>
           {layers.map((layer, index) => (
             <button type="button" className={selectedId === layer.id ? 'layer-item active' : 'layer-item'} key={layer.id} onClick={() => selectLayer(layer.id)}>
-              <span>#{index + 1}</span><span className="layer-preview">{layer.text || '空文本'}</span>
-              <ActionIcon component="span" variant="subtle" color="red" aria-label={`删除 #${index + 1}`} onClick={(event) => { event.stopPropagation(); setDeleteId(layer.id); }}>
+              <span>#{index + 1}</span><span className="layer-preview">{layer.text || t('layers.empty')}</span>
+              <ActionIcon component="span" variant="subtle" color="red" aria-label={translate(t, 'layers.deleteAria', { index: index + 1 })} onClick={(event) => { event.stopPropagation(); setDeleteId(layer.id); }}>
                 <IconTrash size={16} />
               </ActionIcon>
             </button>
@@ -405,12 +535,12 @@ export function ControlPanel() {
       {selected ? <LayerEditor key={selected.id} layer={selected} /> : null}
 
       <section className="panel-section">
-        <SectionTitle icon={IconDatabase}>4. 批量数据</SectionTitle>
+        <SectionTitle icon={IconDatabase}>{t('section.batch')}</SectionTitle>
         <Button component="label" variant="light" leftSection={<IconFileImport size={17} />} disabled={binding.mode === 'none' || binding.mode === 'conflict'}>
-          导入 {binding.mode === 'txt' ? 'TXT' : binding.mode === 'csv' ? 'CSV' : 'CSV / TXT'}
+          {translate(t, 'data.import', { type: binding.mode === 'txt' ? 'TXT' : binding.mode === 'csv' ? 'CSV' : 'CSV / TXT' })}
           <input hidden type="file" accept=".csv,.txt,text/csv,text/plain" onChange={(event) => void uploadData(event.currentTarget.files?.[0] ?? null)} />
         </Button>
-        <Helper>系统按模板中的 {'{{txt}}'} 或 {'{{csv.表头}}'} 自动判断数据源。</Helper>
+        <Helper>{t('data.hint')}</Helper>
         <Text size="xs" c={binding.mode === 'conflict' ? 'red' : 'dimmed'}>{importStatus}</Text>
         {importedIsCurrent ? (
           <ScrollArea h={180} className="data-table-wrap">
@@ -426,39 +556,50 @@ export function ControlPanel() {
         ) : null}
         {batchProgress !== null ? <Progress value={batchProgress * 100} animated /> : null}
         <Button leftSection={<IconFileZip size={17} />} disabled={!importedIsCurrent || batchProgress !== null} onClick={() => void exportBatch()}>
-          {batchProgress !== null ? `生成中 ${Math.round(batchProgress * 100)}%` : '批量生成并下载 ZIP'}
+          {batchProgress !== null ? translate(t, 'data.generating', { progress: Math.round(batchProgress * 100) }) : t('data.download')}
         </Button>
       </section>
 
       <section className="panel-section">
-        <SectionTitle icon={IconDownload}>5. 单张下载</SectionTitle>
-        <Button leftSection={<IconImageInPicture size={17} />} onClick={() => void exportCurrent()}>下载当前图片</Button>
-        <Helper>始终按底图原始分辨率生成 PNG，所有文件只在当前浏览器处理。</Helper>
+        <SectionTitle icon={IconDownload}>{t('section.single')}</SectionTitle>
+        <Button leftSection={<IconImageInPicture size={17} />} onClick={() => void exportCurrent()}>{t('single.download')}</Button>
+        <Helper>{t('single.help')}</Helper>
       </section>
 
-      <Accordion variant="separated" className="advanced-section">
-        <Accordion.Item value="template">
-          <Accordion.Control icon={<IconCode size={16} />}>高级功能</Accordion.Control>
-          <Accordion.Panel>
-            <Group grow>
-              <Button component="label" variant="default" leftSection={<IconFileImport size={16} />}>
-                导入模板<input hidden type="file" accept=".json,application/json" onChange={(event) => void importTemplate(event.currentTarget.files?.[0] ?? null)} />
-              </Button>
-              <Button variant="default" leftSection={<IconCode size={16} />} onClick={exportTemplate}>导出模板</Button>
-            </Group>
-            <Helper>模板只替换文本图层，当前底图保持不变。</Helper>
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion>
+        <Accordion variant="separated" className="advanced-section">
+          <Accordion.Item value="template">
+            <Accordion.Control icon={<IconCode size={16} />}>{t('advanced.title')}</Accordion.Control>
+            <Accordion.Panel>
+              <Group grow>
+                <Button component="label" variant="default" leftSection={<IconFileImport size={16} />}>
+                  {t('advanced.import')}<input hidden type="file" accept=".json,application/json" onChange={(event) => void importTemplate(event.currentTarget.files?.[0] ?? null)} />
+                </Button>
+                <Button variant="default" leftSection={<IconCode size={16} />} onClick={exportTemplate}>{t('advanced.export')}</Button>
+              </Group>
+              <Helper>{t('advanced.help')}</Helper>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
+      </div>
 
-      <Modal opened={deleteId !== null} onClose={() => setDeleteId(null)} title="删除文本图层？" centered>
-        <Text size="sm" c="dimmed">此操作会移除该图层；如果它包含数据变量，当前导入数据也会失效。</Text>
-        <Group justify="flex-end" mt="lg"><Button variant="default" onClick={() => setDeleteId(null)}>取消</Button><Button color="red" onClick={() => { if (deleteId) removeLayer(deleteId); setDeleteId(null); }}>删除</Button></Group>
+      <footer className="site-footer">
+        <span>{formatCopyright(window.location.hostname)}</span>
+        <span className="site-footer-meta">
+          <span>v{packageJson.version}</span>
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>
+            <IconBrandGithub size={14} stroke={1.8} />
+          </a>
+        </span>
+      </footer>
+
+      <Modal opened={deleteId !== null} onClose={() => setDeleteId(null)} title={t('modal.deleteTitle')} centered>
+        <Text size="sm" c="dimmed">{t('modal.deleteBody')}</Text>
+        <Group justify="flex-end" mt="lg"><Button variant="default" onClick={() => setDeleteId(null)}>{t('modal.cancel')}</Button><Button color="red" onClick={() => { if (deleteId) removeLayer(deleteId); setDeleteId(null); }}>{t('modal.delete')}</Button></Group>
       </Modal>
 
-      <Modal opened={pendingTemplate !== null} onClose={() => setPendingTemplate(null)} title="替换当前文本图层？" centered>
-        <Text size="sm" c="dimmed">导入模板会替换当前全部文本图层和安全内边距，底图保持不变。</Text>
-        <Group justify="flex-end" mt="lg"><Button variant="default" onClick={() => setPendingTemplate(null)}>取消</Button><Button onClick={() => { if (pendingTemplate) replaceTemplate(pendingTemplate.canvas, pendingTemplate.layers); setPendingTemplate(null); }}>导入模板</Button></Group>
+      <Modal opened={pendingTemplate !== null} onClose={() => setPendingTemplate(null)} title={t('modal.templateTitle')} centered>
+        <Text size="sm" c="dimmed">{t('modal.templateBody')}</Text>
+        <Group justify="flex-end" mt="lg"><Button variant="default" onClick={() => setPendingTemplate(null)}>{t('modal.cancel')}</Button><Button onClick={() => { if (pendingTemplate) replaceTemplate(pendingTemplate.canvas, pendingTemplate.layers); setPendingTemplate(null); }}>{t('modal.import')}</Button></Group>
       </Modal>
     </aside>
   );

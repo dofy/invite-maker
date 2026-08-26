@@ -7,12 +7,15 @@ import {
   type TemplateFile,
   type TextLayer,
 } from '../model';
+import { AppError } from './app-error';
 
 const color = z.string().regex(/^#[0-9a-f]{6}$/i);
 const layerSchema = z.object({
   text: z.string().max(20_000),
-  xPct: z.number().min(0).max(100),
-  yPct: z.number().min(0).max(100),
+  // Re-anchoring an edge-positioned box can place its anchor outside the canvas
+  // while the box itself remains in exactly the same place.
+  xPct: z.number(),
+  yPct: z.number(),
   size: z.number().min(1).max(2_000),
   width: z.number().min(40).max(20_000).nullable().optional().default(null),
   weight: z.union([z.string(), z.number()]).transform(String),
@@ -41,17 +44,17 @@ const templateSchema = z.object({
 });
 
 export function parseTemplateFile(content: string): { canvas: CanvasModel; layers: Omit<TextLayer, 'id'>[] } {
-  if (new Blob([content]).size > MAX_TEMPLATE_BYTES) throw new Error('模板文件不能超过 1 MB');
+  if (new Blob([content]).size > MAX_TEMPLATE_BYTES) throw new AppError('errors.templateTooLarge');
   let raw: unknown;
   try {
     raw = JSON.parse(content);
   } catch {
-    throw new Error('模板不是有效的 JSON 文件');
+    throw new AppError('errors.templateInvalidJson');
   }
   const parsed = templateSchema.safeParse(raw);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    throw new Error(`模板字段 ${issue?.path.join('.') || 'root'} 无效：${issue?.message ?? '格式错误'}`);
+    throw new AppError('errors.templateFieldInvalid', { field: issue?.path.join('.') || 'root' });
   }
   return { canvas: parsed.data.canvas, layers: parsed.data.layers };
 }
