@@ -12,7 +12,6 @@ import {
   ScrollArea,
   SegmentedControl,
   Select,
-  Slider,
   Stack,
   Table,
   Text,
@@ -31,16 +30,19 @@ import {
   IconBrandGithub,
   IconCalendar,
   IconCheck,
+  IconChevronDown,
   IconClock,
   IconCode,
   IconDatabase,
   IconDeviceDesktop,
   IconDownload,
   IconFileDescription,
+  IconFileDownload,
   IconFileImport,
+  IconFileTypeCsv,
+  IconFileTypeTxt,
   IconFileZip,
   IconFingerprint,
-  IconHash,
   IconImageInPicture,
   IconLanguage,
   IconStack,
@@ -48,7 +50,7 @@ import {
   IconPlus,
   IconMoon,
   IconSun,
-  IconTableColumn,
+  IconTransferOut,
   IconTrash,
   IconTypography,
 } from '@tabler/icons-react';
@@ -287,37 +289,40 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
           </Button>
         ))}
       </div>
-      <Group gap="xs" wrap="nowrap">
-        <TextInput
-          value={csvField}
-          onChange={(event) => setCsvField(event.currentTarget.value)}
-          list={`csv-headers-${layer.id}`}
-          placeholder={t('editor.csvPlaceholder')}
-          aria-label={t('editor.csvAria')}
-          className="grow-control"
-        />
-        <datalist id={`csv-headers-${layer.id}`}>{headers.map((header) => <option key={header} value={header} />)}</datalist>
-        <Tooltip label={t('editor.csvInsert')}>
-          <ActionIcon size="lg" variant="light" aria-label={t('editor.csvInsert')} onClick={() => csvField.trim() && insertToken(`{{csv.${csvField.trim()}}}`)}>
-            <IconTableColumn size={18} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-      <Group gap="xs" wrap="nowrap">
-        <NumberInput
-          value={indexWidth}
-          onChange={setIndexWidth}
-          min={1}
-          max={12}
-          label={t('editor.indexDigits')}
-          className="grow-control"
-        />
-        <Tooltip label={t('editor.indexInsert')}>
-          <ActionIcon mt={25} size="lg" variant="light" aria-label={t('editor.indexInsert')} onClick={() => insertToken(`{{index:${Math.max(1, Math.min(12, Number(indexWidth) || 1))}}}`)}>
-            <IconHash size={18} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
+      <TextInput
+        label={t('editor.csvAria')}
+        value={csvField}
+        onChange={(event) => setCsvField(event.currentTarget.value)}
+        list={`csv-headers-${layer.id}`}
+        placeholder={t('editor.csvPlaceholder')}
+        rightSectionPointerEvents="all"
+        rightSectionWidth={40}
+        rightSection={(
+          <Tooltip label={t('editor.csvInsert')}>
+            <ActionIcon className="input-insert-action" size="sm" variant="subtle" disabled={!csvField.trim()} aria-label={t('editor.csvInsert')} onClick={() => csvField.trim() && insertToken(`{{csv.${csvField.trim()}}}`)}>
+              <IconTransferOut size={17} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      />
+      <datalist id={`csv-headers-${layer.id}`}>{headers.map((header) => <option key={header} value={header} />)}</datalist>
+      <NumberInput
+        value={indexWidth}
+        onChange={setIndexWidth}
+        min={1}
+        max={12}
+        label={t('editor.indexDigits')}
+        hideControls
+        rightSectionPointerEvents="all"
+        rightSectionWidth={40}
+        rightSection={(
+          <Tooltip label={t('editor.indexInsert')}>
+            <ActionIcon className="input-insert-action" size="sm" variant="subtle" aria-label={t('editor.indexInsert')} onClick={() => insertToken(`{{index:${Math.max(1, Math.min(12, Number(indexWidth) || 1))}}}`)}>
+              <IconTransferOut size={17} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      />
       <Helper>{t('editor.example')}</Helper>
 
       <Select label={t('editor.font')} value={layer.font} onChange={(font) => font && update({ font })} data={fontOptions(t)} searchable />
@@ -371,6 +376,8 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
 
       <div className="width-row">
         <Select
+          className="width-mode-select"
+          classNames={{ option: 'width-mode-option' }}
           label={t('editor.width')}
           value={layer.width === null ? 'auto' : 'fixed'}
           onChange={(mode) => update({ width: mode === 'fixed' ? layer.width ?? 320 : null })}
@@ -389,19 +396,29 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
       </div>
       <Helper>{t('editor.resizeHelp')}</Helper>
 
-      <div className="form-row slider-row">
-        <Text component="label" size="sm" fw={600}>{t('editor.letterSpacing')}</Text>
-        <Slider min={-5} max={30} value={layer.spacing} onChange={(spacing) => update({ spacing })} aria-label={t('editor.letterSpacing')} />
-        <span className="numeric-value">{layer.spacing}</span>
-      </div>
-
-      <div className="stroke-row">
-        <ColorInput label={t('editor.stroke')} value={layer.stroke} onChange={(stroke) => update({ stroke })} format="hex" />
-        <div>
-          <Text component="label" size="sm" fw={600}>{t('editor.strokeWidth')}</Text>
-          <Slider min={0} max={10} value={layer.strokeW} onChange={(strokeW) => update({ strokeW })} aria-label={`${t('editor.stroke')} ${t('editor.strokeWidth')}`} />
-        </div>
-        <span className="numeric-value">{layer.strokeW}</span>
+      <div className="style-fields">
+        <Text component="label" htmlFor={`letter-spacing-${layer.id}`} size="sm" fw={600}>{t('editor.letterSpacing')}</Text>
+        <NumberInput
+          id={`letter-spacing-${layer.id}`}
+          aria-label={t('editor.letterSpacing')}
+          suffix=" px"
+          min={-5}
+          max={30}
+          value={layer.spacing}
+          onChange={(value) => update({ spacing: Math.max(-5, Math.min(30, Number(value) || 0)) })}
+        />
+        <Text component="label" htmlFor={`stroke-color-${layer.id}`} size="sm" fw={600}>{t('editor.stroke')}</Text>
+        <ColorInput id={`stroke-color-${layer.id}`} aria-label={t('editor.stroke')} value={layer.stroke} onChange={(stroke) => update({ stroke })} format="hex" />
+        <Text component="label" htmlFor={`stroke-width-${layer.id}`} size="sm" fw={600}>{t('editor.strokeWidth')}</Text>
+        <NumberInput
+          id={`stroke-width-${layer.id}`}
+          aria-label={t('editor.strokeWidth')}
+          suffix=" px"
+          min={0}
+          max={10}
+          value={layer.strokeW}
+          onChange={(value) => update({ strokeW: Math.max(0, Math.min(10, Number(value) || 0)) })}
+        />
       </div>
     </section>
   );
@@ -536,10 +553,33 @@ export function ControlPanel() {
 
       <section className="panel-section">
         <SectionTitle icon={IconDatabase}>{t('section.batch')}</SectionTitle>
-        <Button component="label" variant="light" leftSection={<IconFileImport size={17} />} disabled={binding.mode === 'none' || binding.mode === 'conflict'}>
-          {translate(t, 'data.import', { type: binding.mode === 'txt' ? 'TXT' : binding.mode === 'csv' ? 'CSV' : 'CSV / TXT' })}
-          <input hidden type="file" accept=".csv,.txt,text/csv,text/plain" onChange={(event) => void uploadData(event.currentTarget.files?.[0] ?? null)} />
-        </Button>
+        <div className="batch-actions">
+          <Button component="label" variant="light" leftSection={<IconFileImport size={17} />} disabled={binding.mode === 'none' || binding.mode === 'conflict'}>
+            {translate(t, 'data.import', { type: binding.mode === 'txt' ? 'TXT' : binding.mode === 'csv' ? 'CSV' : 'CSV / TXT' })}
+            <input hidden type="file" accept=".csv,.txt,text/csv,text/plain" onChange={(event) => void uploadData(event.currentTarget.files?.[0] ?? null)} />
+          </Button>
+          <Menu position="bottom-end" withinPortal>
+            <Menu.Target>
+              <Button variant="default" leftSection={<IconFileDownload size={17} />} rightSection={<IconChevronDown size={14} />}>
+                {t('data.examples')}
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item component="a" href="/examples/csv-single-field.csv" download leftSection={<IconFileTypeCsv size={17} />}>
+                {t('data.exampleCsvSingle')}
+              </Menu.Item>
+              <Menu.Item component="a" href="/examples/csv-multiple-fields.csv" download leftSection={<IconFileTypeCsv size={17} />}>
+                {t('data.exampleCsvMultiple')}
+              </Menu.Item>
+              <Menu.Item component="a" href="/examples/txt-names.txt" download leftSection={<IconFileTypeTxt size={17} />}>
+                {t('data.exampleTxtNames')}
+              </Menu.Item>
+              <Menu.Item component="a" href="/examples/txt-complete-lines.txt" download leftSection={<IconFileTypeTxt size={17} />}>
+                {t('data.exampleTxtLines')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </div>
         <Helper>{t('data.hint')}</Helper>
         <Text size="xs" c={binding.mode === 'conflict' ? 'red' : 'dimmed'}>{importStatus}</Text>
         {importedIsCurrent ? (

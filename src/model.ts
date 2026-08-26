@@ -65,7 +65,7 @@ export function createTextLayer(_index: number, preset: Partial<TextLayer> = {})
     size: preset.size ?? 40,
     width: preset.width ?? null,
     weight: preset.weight ?? '400',
-    color: preset.color ?? '#ffffff',
+    color: preset.color ?? '#000000',
     align: preset.align ?? 'center',
     anchorX: preset.anchorX ?? 'center',
     anchorY: preset.anchorY ?? 'center',

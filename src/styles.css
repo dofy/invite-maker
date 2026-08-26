@@ -111,6 +111,12 @@ html, body, #root { width: 100%; height: 100%; margin: 0; }
 body { overflow: hidden; background: var(--app-bg); color: var(--text); }
 button, input, textarea, select { font: inherit; }
 
+.mantine-ColorInput-input,
+.mantine-NumberInput-input {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
@@ -295,31 +301,40 @@ button, input, textarea, select { font: inherit; }
   background: var(--token-bg);
 }
 
+.batch-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.batch-actions .mantine-Button-root { width: 100%; }
+.batch-actions .mantine-Button-label { white-space: normal; }
+
 .grow-control { flex: 1 1 auto; min-width: 0; }
 
-.form-row {
+.input-insert-action { color: var(--champagne-bright); }
+
+.paired-controls {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 38px;
-  align-items: center;
-  gap: 9px;
-}
-
-.slider-row { min-height: 38px; }
-
-.numeric-value {
-  color: var(--numeric-text);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.paired-controls,
-.width-row {
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(124px, 0.65fr);
   gap: 12px;
   align-items: end;
 }
+
+.width-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(104px, 0.55fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.width-mode-select .mantine-Select-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.width-mode-option { white-space: nowrap; }
 
 .paired-controls > * + * {
   position: relative;
@@ -384,15 +399,14 @@ button, input, textarea, select { font: inherit; }
 .anchor-symbol.y-top { --dot-y: 0%; }
 .anchor-symbol.y-bottom { --dot-y: 100%; }
 
-.stroke-row {
+.style-fields {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 38px;
-  align-items: end;
-  gap: 10px;
+  grid-template-columns: 124px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 12px;
 }
 
-.stroke-row > :first-child { grid-column: 1 / -1; }
-.stroke-row .mantine-Slider-root { margin-bottom: 11px; }
+.style-fields > label { line-height: 1.35; }
 
 .layer-item {
   display: grid;
@@ -514,7 +528,10 @@ button, input, textarea, select { font: inherit; }
   .control-panel-scroll { padding: 11px; }
   .site-footer { align-items: flex-start; flex-direction: column; gap: 4px; padding: 9px 11px max(9px, env(safe-area-inset-bottom)); }
   .token-grid { grid-template-columns: 1fr; }
-  .paired-controls, .width-row { grid-template-columns: 1fr 1.15fr; gap: 8px; }
+  .paired-controls { gap: 8px; }
+  .paired-controls > * + * { padding-left: 8px; }
+  .width-row { gap: 8px; }
+  .style-fields { grid-template-columns: 112px minmax(0, 1fr); gap: 9px 8px; }
   .panel-section { padding: 11px; }
 }
 

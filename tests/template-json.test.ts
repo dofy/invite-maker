@@ -7,6 +7,10 @@ describe('template JSON', () => {
     expect(createTextLayer(12).text).toBe('Text');
   });
 
+  it('uses black text by default for light placeholder backgrounds', () => {
+    expect(createTextLayer(1).color).toBe('#000000');
+  });
+
   it('migrates old templates without explicit anchors', () => {
     const parsed = parseTemplateFile(JSON.stringify({
       canvas: { width: 1200, height: 1600 },

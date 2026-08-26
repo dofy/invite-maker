@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
         manifest: false,
         workbox: {
           cleanupOutdatedCaches: true,
-          globPatterns: ['**/*.{html,js,css,ico,png,svg,webp,woff2,webmanifest}'],
+          globPatterns: ['**/*.{html,js,css,csv,txt,ico,png,svg,webp,woff2,webmanifest}'],
           navigateFallback: '/index.html',
           runtimeCaching: [
             {
