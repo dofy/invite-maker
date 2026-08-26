@@ -1,7 +1,11 @@
 name = "invite-maker"
 compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "public"
 
-# 纯静态 Pages 项目：public/ 目录直接部署，无需构建。
-# 本地预览：  npx wrangler pages dev public
-# 部署上线：  npx wrangler pages deploy public
+# Pages 项目 + Pages Functions（functions/ 目录自动编译成 Worker）
+# 前端静态：  public/
+# 后端 API：  functions/api/render.js  →  POST /api/render
+#
+# 本地预览：  pnpm dev   (wrangler pages dev)
+# 部署上线：  pnpm deploy

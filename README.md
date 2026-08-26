@@ -2,7 +2,12 @@
 
 上传底图 → 可视化叠加文字（拖拽定位、调字体/字号/颜色/描边）→ 实时预览 → 导出 PNG。
 
-部署在 **Cloudflare Pages**（纯静态，无服务器成本）。
+架构：**Cloudflare Pages（前端）+ Pages Functions（Worker 后端）**。
+
+- **本地渲染**：浏览器 Canvas 导出，零后端、零成本、隐私好（图片不出设备）
+- **服务端渲染**：Worker + `satori` + `resvg-wasm`，跨端字体一致（内嵌思源黑体）、超高清输出
+
+两种导出并存，用户按需选。后期要加 R2 存档 / 分享链接 / 批量生成，直接在 `functions/` 下扩展即可。
 
 ## 功能
 
@@ -18,16 +23,15 @@
 
 ```bash
 cd ~/Works/product/apps/invite-maker
-npx wrangler pages dev public
-# 或不装 wrangler，直接起个静态服务器：
-npx serve public
+pnpm install
+pnpm dev          # wrangler pages dev（含 Functions），http://localhost:8788
 ```
 
 ## 部署到 Cloudflare Pages
 
 ```bash
-npx wrangler pages deploy public
-# 首次会提示登录 + 创建项目
+pnpm deploy       # wrangler pages deploy public
+# 首次会提示登录 + 创建项目；Functions 会随之部署
 ```
 
 或在 Cloudflare Dashboard → Pages → 连接 Git 仓库，构建输出目录设为 `public/`。
@@ -37,11 +41,33 @@ npx wrangler pages deploy public
 ```
 invite-maker/
 ├── public/
-│   ├── index.html   # 编辑器 UI
-│   └── app.js       # 编辑器逻辑（Canvas 合成 + 导出）
-├── wrangler.toml    # Cloudflare Pages 配置
+│   ├── index.html          # 编辑器 UI
+│   └── app.js              # 编辑器逻辑（Canvas 预览/导出 + 模板 JSON + 调后端）
+├── functions/
+│   └── api/
+│       └── render.js       # POST /api/render — satori+resvg 服务端渲染 PNG
+├── wrangler.toml           # Cloudflare Pages + Functions 配置
+├── package.json
 └── README.md
 ```
+
+## 服务端渲染 API
+
+`POST /api/render`，Body 为模板 JSON（前端「导出模板 JSON」按钮的格式）：
+
+```jsonc
+{
+  "canvas": { "width": 1200, "height": 1600 },
+  "background": "data:image/png;base64,...",   // 或 https URL
+  "layers": [
+    { "text": "诚邀您", "xPct": 50, "yPct": 45, "size": 64,
+      "weight": 700, "color": "#8B5A2B", "align": "center",
+      "spacing": 2, "stroke": "#000", "strokeW": 0 }
+  ]
+}
+```
+
+返回 `image/png`。前后端共用同一份坐标/样式，保证预览 ≈ 成品。
 
 ## 后续增强方向（可选）
 

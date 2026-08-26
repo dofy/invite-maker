@@ -222,6 +222,59 @@
   document.getElementById('exportBtn').onclick = () => exportPNG(false);
   document.getElementById('exportHiBtn').onclick = () => exportPNG(true);
 
+  // ---- 导出模板配置 JSON（前后端共用同一份坐标/样式）----
+  function buildTemplate(withBg) {
+    return {
+      canvas: { width: natW, height: natH },
+      background: withBg ? bg.src : null,
+      layers: layers.map(l => ({
+        text: l.content,
+        xPct: +l.xPct.toFixed(2),
+        yPct: +l.yPct.toFixed(2),
+        size: Math.round(l.size * (natW / stage.offsetWidth)),
+        weight: l.weight,
+        color: l.color,
+        align: l.align,
+        spacing: l.spacing,
+        stroke: l.stroke,
+        strokeW: l.strokeW,
+        font: l.font,
+      })),
+    };
+  }
+  const exportTplBtn = document.getElementById('exportTplBtn');
+  if (exportTplBtn) exportTplBtn.onclick = () => {
+    const blob = new Blob([JSON.stringify(buildTemplate(false), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `invite-template_${Date.now()}.json`;
+    a.click();
+  };
+
+  // ---- 服务端渲染（Worker satori+resvg，跨端字体一致 + 高清）----
+  const serverBtn = document.getElementById('serverBtn');
+  if (serverBtn) serverBtn.onclick = async () => {
+    if (!bg.src || !natW) { alert('请先上传底图'); return; }
+    serverBtn.disabled = true; serverBtn.textContent = '渲染中…';
+    try {
+      const res = await fetch('/api/render', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(buildTemplate(true)),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || res.status);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `invite_server_${Date.now()}.png`;
+      a.click();
+    } catch (e) {
+      alert('服务端渲染失败：' + e.message);
+    } finally {
+      serverBtn.disabled = false; serverBtn.textContent = '服务端渲染';
+    }
+  };
+
   // 点击空白取消选中
   stage.addEventListener('mousedown', e => { if (e.target === stage || e.target === bg) selectLayer(null); });
 

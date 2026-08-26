@@ -156,9 +156,13 @@
       <label>4. 生成</label>
       <div class="btn-row">
         <button id="exportBtn">导出 PNG</button>
-        <button id="exportHiBtn" class="secondary">高清导出</button>
+        <button id="exportHiBtn" class="secondary">本地高清</button>
       </div>
-      <p class="hint">拖动文字定位，右下角圆点拉伸字号。高清导出按原图分辨率渲染。</p>
+      <div class="btn-row">
+        <button id="serverBtn" class="secondary">服务端渲染</button>
+        <button id="exportTplBtn" class="secondary">导出模板 JSON</button>
+      </div>
+      <p class="hint">拖动文字定位，右下角圆点拉伸字号。<b>本地</b>用浏览器 Canvas（依赖系统字体）；<b>服务端</b>用 Worker+satori 渲染（跨端字体一致、内嵌思源黑体）。</p>
     </div>
   </div>
 

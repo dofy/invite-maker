@@ -1,0 +1,19 @@
+{
+  "name": "invite-maker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "邀请函生成器：Pages 前端编辑器 + Worker(satori+resvg) 服务端渲染",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev public --compatibility-date=2026-08-01",
+    "deploy": "wrangler pages deploy public",
+    "fonts": "node scripts/fetch-fonts.mjs"
+  },
+  "dependencies": {
+    "satori": "^0.12.1",
+    "@resvg/resvg-wasm": "^2.6.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
