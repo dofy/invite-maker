@@ -273,14 +273,25 @@ button, input, textarea, select { font: inherit; }
   display: flex;
   align-items: center;
   gap: 7px;
+  margin: 0;
   color: var(--section-label);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.2px;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 
 .section-title svg { color: var(--champagne); }
+
+.panel-subtitle {
+  margin: 0;
+  color: var(--helper-text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
 
 .helper {
   padding-left: 9px;
@@ -445,6 +456,7 @@ button, input, textarea, select { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 10px 18px max(10px, env(safe-area-inset-bottom));
   border-top: 1px solid rgba(214, 173, 107, 0.11);
@@ -453,6 +465,14 @@ button, input, textarea, select { font: inherit; }
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.35px;
+}
+
+.site-footer-links {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
 }
 
 .site-footer a {

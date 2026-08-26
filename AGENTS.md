@@ -65,6 +65,8 @@ invite-maker/
 - **批次上限**：单次最多 200 条，避免浏览器峰值内存失控。
 - **模板 JSON**：包含 `canvas` 与 `layers`；不保存图层类型/key，也不内嵌底图。导入只替换图层与安全内边距，限制 1 MB / 200 图层并由 Zod 校验。
 - **隐私边界**：不得为图片、模板或名单增加上传行为，除非用户明确改变产品方向。
+- **静态可索引内容**：`index.html` 的 `#root` 内保留与应用功能一致的语义化回退正文，供不执行 JavaScript 的抓取器和无脚本环境读取；React 启动时清空并接管根节点。更新产品能力时需同步正文、JSON-LD、`public/llms.txt` 与站点说明页。
+- **站点发现与信任**：`public/sitemap.xml`、`robots.txt`、`about.html`、`privacy.html`、`terms.html` 是正式发布资产。隐私说明必须明确区分浏览器本地素材处理、Cloudflare 静态托管请求与 Google Fonts 网络请求，不得夸大为“网站没有任何网络数据”。
 
 ## 开发命令
 

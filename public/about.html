@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="了解 Tsudoi 在线邀请函生成器的产品目标、隐私原则、技术架构、开源仓库与联系渠道。" />
+    <meta name="robots" content="index, follow" />
+    <title>关于 Tsudoi｜隐私优先的在线邀请函生成器</title>
+    <link rel="canonical" href="https://tsudoi.yahaha.net/about.html" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="page-header">
+        <a class="brand" href="/"><img src="/favicon.svg" alt="" />Tsudoi</a>
+        <nav class="page-nav" aria-label="站点信息">
+          <a href="/about.html" aria-current="page">关于</a>
+          <a href="/privacy.html">隐私</a>
+          <a href="/terms.html">条款</a>
+          <a href="https://github.com/dofy/invite-maker/issues">联系</a>
+        </nav>
+      </header>
+      <main>
+        <h1>关于 Tsudoi</h1>
+        <p class="lede">Tsudoi 是一款免费、开源、隐私优先的在线邀请函生成器，帮助用户从一张设计底图制作单张或整批个性化邀请函。</p>
+
+        <h2>产品目标</h2>
+        <p>Tsudoi 将可视化文字排版、CSV/TXT 数据填充与高清图片导出整合在浏览器中。用户可以直接拖动文本、调整样式和锚点，预览名单中的任意记录，并生成原图分辨率 PNG 或批量 ZIP。</p>
+
+        <h2>设计原则</h2>
+        <h3>所见即所得</h3>
+        <p>编辑预览与最终导出复用同一套 Canvas 场景、文字配置和百分比坐标，减少预览与成品之间的布局差异。</p>
+        <h3>素材留在设备上</h3>
+        <p>底图、名单、模板和生成文件都在当前浏览器内处理。产品不包含素材上传接口，也不依赖服务端图片渲染。</p>
+        <h3>开放且可验证</h3>
+        <p>项目源码与开发记录公开保存在 <a href="https://github.com/dofy/invite-maker">GitHub 仓库</a>。产品建议、兼容性报告或其他问题可以通过 <a href="https://github.com/dofy/invite-maker/issues">GitHub Issues</a> 联系维护者。</p>
+
+        <h2>技术依据</h2>
+        <p>本地文件读取使用浏览器 <a href="https://developer.mozilla.org/docs/Web/API/File_API">File API</a>，图片绘制与导出使用 <a href="https://developer.mozilla.org/docs/Web/API/Canvas_API">Canvas API</a>，离线支持基于 <a href="https://developer.mozilla.org/docs/Web/API/Service_Worker_API">Service Worker API</a>。相关链接指向 MDN 技术文档。</p>
+
+        <section class="english-summary" lang="en" aria-labelledby="english-summary">
+          <h2 id="english-summary">English summary</h2>
+          <p>Tsudoi is a free, open-source, privacy-first visual invitation maker. Backgrounds, recipient lists, templates, and generated files are processed locally in the browser. Source code and support are available through the project’s GitHub repository.</p>
+        </section>
+      </main>
+      <footer><span>© 2026 Tsudoi</span><a href="/">返回编辑器</a></footer>
+    </div>
+  </body>
+</html>

@@ -126,7 +126,7 @@ const LANGUAGE_OPTIONS: Array<{ value: AppLanguage; key: TranslationKey }> = [
 ];
 
 function SectionTitle({ icon: Icon, children }: { icon: typeof IconImageInPicture; children: React.ReactNode }) {
-  return <div className="section-title"><Icon size={15} stroke={1.8} /><span>{children}</span></div>;
+  return <h2 className="section-title"><Icon size={15} stroke={1.8} /><span>{children}</span></h2>;
 }
 
 function Helper({ children }: { children: React.ReactNode }) {
@@ -553,6 +553,7 @@ export function ControlPanel() {
 
       <section className="panel-section">
         <SectionTitle icon={IconDatabase}>{t('section.batch')}</SectionTitle>
+        <h3 className="panel-subtitle">{t('data.sourceTitle')}</h3>
         <div className="batch-actions">
           <Button component="label" variant="light" leftSection={<IconFileImport size={17} />} disabled={binding.mode === 'none' || binding.mode === 'conflict'}>
             {translate(t, 'data.import', { type: binding.mode === 'txt' ? 'TXT' : binding.mode === 'csv' ? 'CSV' : 'CSV / TXT' })}
@@ -624,6 +625,12 @@ export function ControlPanel() {
 
       <footer className="site-footer">
         <span>{formatCopyright(window.location.hostname)}</span>
+        <nav className="site-footer-links" aria-label={t('footer.navigation')}>
+          <a href="/about.html">{t('footer.about')}</a>
+          <a href="/privacy.html">{t('footer.privacy')}</a>
+          <a href="/terms.html">{t('footer.terms')}</a>
+          <a href="https://github.com/dofy/invite-maker/issues" target="_blank" rel="noreferrer">{t('footer.contact')}</a>
+        </nav>
         <span className="site-footer-meta">
           <span>v{packageJson.version}</span>
           <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>

@@ -21,7 +21,11 @@ const theme = createTheme({
 
 const colorSchemeManager = localStorageColorSchemeManager({ key: 'invite-maker-theme' });
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Missing application root');
+rootElement.replaceChildren();
+
+createRoot(rootElement).render(
   <StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="auto" colorSchemeManager={colorSchemeManager}>
       <Notifications position="top-right" limit={4} />

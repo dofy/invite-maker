@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tsudoi 隐私政策：底图、名单、模板与生成结果在浏览器本地处理，并说明站点请求、字体、缓存和本地偏好设置。" />
+    <meta name="robots" content="index, follow" />
+    <title>Tsudoi 隐私政策｜底图与名单仅在本地处理</title>
+    <link rel="canonical" href="https://tsudoi.yahaha.net/privacy.html" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="page-header">
+        <a class="brand" href="/"><img src="/favicon.svg" alt="" />Tsudoi</a>
+        <nav class="page-nav" aria-label="站点信息">
+          <a href="/about.html">关于</a>
+          <a href="/privacy.html" aria-current="page">隐私</a>
+          <a href="/terms.html">条款</a>
+          <a href="https://github.com/dofy/invite-maker/issues">联系</a>
+        </nav>
+      </header>
+      <main>
+        <h1>隐私政策</h1>
+        <p class="meta">发布日期：<time datetime="2026-08-26">2026-08-26</time> · 最近更新：<time datetime="2026-08-27">2026-08-27</time></p>
+        <p class="lede">Tsudoi 的核心隐私原则很简单：用于制作邀请函的素材在你的设备上处理，不会被上传到 Tsudoi 的服务器。</p>
+
+        <h2>本地处理的内容</h2>
+        <p class="notice">你选择的底图、CSV/TXT 名单、模板 JSON、画布状态以及生成的 PNG/ZIP 均由当前浏览器处理。Tsudoi 没有接收这些内容的上传接口，也不提供服务端图片合成功能。</p>
+
+        <h2>站点运行产生的请求</h2>
+        <p>访问网页时，浏览器会向 Cloudflare Pages 请求 HTML、JavaScript、CSS、图标和占位图片。托管服务可能按照其基础设施政策处理常规网络信息，例如 IP 地址、User-Agent、请求时间和错误日志。Tsudoi 应用源码未集成广告 SDK 或行为分析 SDK。</p>
+
+        <h2>字体与第三方链接</h2>
+        <p>网络字体来自 Google Fonts。浏览器连接 Google Fonts 时，Google 可能收到常规网络请求信息；如果字体服务不可用，Tsudoi 会使用系统字体回退。访问 GitHub、MDN 或其他外部链接时，目标网站适用其自己的隐私政策。</p>
+
+        <h2>本地存储与离线缓存</h2>
+        <p>Tsudoi 使用浏览器本地存储保存界面语言与主题偏好，并通过 Service Worker 缓存应用静态资源以支持离线使用。你可以通过浏览器的站点数据设置清除这些偏好与缓存。</p>
+
+        <h2>联系我们</h2>
+        <p>如对隐私说明有疑问，请在 <a href="https://github.com/dofy/invite-maker/issues">GitHub Issues</a> 中提交问题。请勿在公开 Issue 中附上真实名单、私人底图或其他敏感信息。</p>
+
+        <section class="english-summary" lang="en" aria-labelledby="english-summary">
+          <h2 id="english-summary">English summary</h2>
+          <p>Invitation backgrounds, CSV/TXT recipient data, template JSON, canvas state, and generated PNG/ZIP files are processed locally in your browser and are not uploaded to Tsudoi. The site uses local storage for language and theme preferences, a service worker for offline caching, Cloudflare Pages for static hosting, and Google Fonts for optional web fonts.</p>
+        </section>
+      </main>
+      <footer><span>© 2026 Tsudoi</span><a href="/">返回编辑器</a></footer>
+    </div>
+  </body>
+</html>
