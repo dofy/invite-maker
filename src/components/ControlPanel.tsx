@@ -213,7 +213,13 @@ export function AppHeader() {
   return (
     <header className="app-title">
       <IconImageInPicture size={24} stroke={1.6} />
-      <div className="app-brand"><h1>{t('app.name')}</h1><small>{t('app.subtitle')}</small></div>
+      <div className="app-brand">
+        <div className="app-brand-heading">
+          <h1>{t('app.name')}</h1>
+          <span className="app-version">v{packageJson.version}</span>
+        </div>
+        <small>{t('app.subtitle')}</small>
+      </div>
       <div className="app-title-controls"><LanguagePicker /><ThemePicker /></div>
     </header>
   );
@@ -624,14 +630,8 @@ export function ControlPanel() {
       </div>
 
       <footer className="site-footer">
-        <span className="site-footer-meta">
-          <span className="site-footer-copyright" title={formatCopyright(window.location.hostname)}>
-            {formatCopyright(window.location.hostname)}
-          </span>
-          <span className="site-footer-version">v{packageJson.version}</span>
-          <a href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>
-            <IconBrandGithub size={14} stroke={1.8} />
-          </a>
+        <span className="site-footer-copyright" title={formatCopyright(window.location.hostname)}>
+          {formatCopyright(window.location.hostname)}
         </span>
         <nav className="site-footer-links" aria-label={t('footer.navigation')}>
           <a href="/about">{t('footer.about')}</a>
@@ -639,6 +639,9 @@ export function ControlPanel() {
           <a href="/terms">{t('footer.terms')}</a>
           <a href="https://github.com/dofy/invite-maker/issues" target="_blank" rel="noreferrer">{t('footer.contact')}</a>
         </nav>
+        <a className="site-footer-github" href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>
+          <IconBrandGithub size={14} stroke={1.8} />
+        </a>
       </footer>
 
       <Modal opened={deleteId !== null} onClose={() => setDeleteId(null)} title={t('modal.deleteTitle')} centered>
