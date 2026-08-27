@@ -68,6 +68,7 @@ function CanvasText({
   const transformerRef = useRef<Konva.Transformer>(null);
   const anchorMarkerRef = useRef<Konva.Group>(null);
   const resizeWidthRef = useRef<number | null>(null);
+  const lastHandlePressRef = useRef<{ handle: HorizontalResizeHandle; time: number } | null>(null);
   const previousAnchorRef = useRef({ x: layer.anchorX, y: layer.anchorY });
   const canvas = useMemo(() => ({ width: canvasWidth, height: canvasHeight, padding: 0 }), [canvasWidth, canvasHeight]);
 
@@ -167,6 +168,30 @@ function CanvasText({
     useEditorStore.getState().updateLayer(layer.id, { width: nextWidth });
   };
 
+  const resetWidthToContent = (event: Konva.KonvaEventObject<Event>) => {
+    const handle = event.target.name().split(' ')[0] as HorizontalResizeHandle;
+    if (layer.width === null || !horizontalResizeHandles(layer.anchorX).includes(handle)) return;
+    event.cancelBubble = true;
+    resizeWidthRef.current = null;
+    onGuide(null, null);
+    useEditorStore.getState().updateLayer(layer.id, { width: null });
+  };
+
+  const handleResizePress = (event: Konva.KonvaEventObject<Event>) => {
+    const handle = event.target.name().split(' ')[0] as HorizontalResizeHandle;
+    if (!horizontalResizeHandles(layer.anchorX).includes(handle)) return;
+    const time = performance.now();
+    const previous = lastHandlePressRef.current;
+    lastHandlePressRef.current = { handle, time };
+    if (layer.width === null || !previous || previous.handle !== handle || time - previous.time > Konva.dblClickWindow) return;
+    lastHandlePressRef.current = null;
+    event.cancelBubble = true;
+    transformerRef.current?.stopTransform();
+    resetWidthToContent(event);
+  };
+
+  const handleSize = 10 / Math.max(scale, 0.01);
+
   return (
     <>
       <Text
@@ -212,8 +237,13 @@ function CanvasText({
           keepRatio={false}
           centeredScaling={usesCenteredResize(layer.anchorX)}
           enabledAnchors={horizontalResizeHandles(layer.anchorX)}
-          anchorSize={8 / Math.max(scale, 0.01)}
-          anchorCornerRadius={4 / Math.max(scale, 0.01)}
+          anchorSize={handleSize}
+          anchorCornerRadius={layer.width === null ? handleSize / 2 : 1.5 / Math.max(scale, 0.01)}
+          anchorStyleFunc={(anchor) => {
+            anchor.hitStrokeWidth(18 / Math.max(scale, 0.01));
+            anchor.off('.fit-content');
+            anchor.on('mousedown.fit-content touchstart.fit-content', handleResizePress);
+          }}
           borderStroke="#5f9fd9"
           borderStrokeWidth={1 / Math.max(scale, 0.01)}
           anchorFill="#dceeff"

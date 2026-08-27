@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Accordion,
   ActionIcon,
+  Autocomplete,
   Button,
   ColorInput,
   Group,
@@ -15,7 +16,6 @@ import {
   Stack,
   Table,
   Text,
-  TextInput,
   Textarea,
   Tooltip,
   useComputedColorScheme,
@@ -23,10 +23,13 @@ import {
   type MantineColorScheme,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useMediaQuery } from '@mantine/hooks';
 import {
   IconAlignCenter,
   IconAlignLeft,
   IconAlignRight,
+  IconArrowLeft,
+  IconArrowsMaximize,
   IconBrandGithub,
   IconCalendar,
   IconCheck,
@@ -56,7 +59,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import type { AnchorX, AnchorY, HorizontalAlign, TextLayer } from '../model';
+import type { AnchorX, AnchorY, BatchRecord, HorizontalAlign, TextLayer } from '../model';
 import { analyzeBindings } from '../lib/template';
 import { importDataFile } from '../lib/data';
 import { buildTemplate, parseTemplateFile } from '../lib/template-json';
@@ -84,23 +87,33 @@ function fontOptions(t: TFunction) {
   ] },
   { group: t('editor.fontGroupChinese'), items: [
     { value: '"Noto Sans SC","PingFang SC",sans-serif', label: 'Noto Sans SC' },
+    { value: '"Noto Sans TC","PingFang TC",sans-serif', label: 'Noto Sans TC' },
     { value: '"Noto Serif SC","Songti SC",serif', label: 'Noto Serif SC' },
     { value: '"Noto Serif TC","Songti TC",serif', label: 'Noto Serif TC' },
+    { value: '"LXGW WenKai","Kaiti SC",serif', label: 'LXGW WenKai' },
     { value: '"Ma Shan Zheng","Kaiti SC",cursive', label: 'Ma Shan Zheng' },
+    { value: '"Long Cang","Kaiti SC",cursive', label: 'Long Cang' },
     { value: '"ZCOOL XiaoWei","Songti SC",serif', label: 'ZCOOL XiaoWei' },
   ] },
   { group: t('editor.fontGroupLatin'), items: [
+    { value: 'Montserrat,"Helvetica Neue",sans-serif', label: 'Montserrat' },
     { value: '"Great Vibes","Brush Script MT",cursive', label: `Great Vibes · ${t('editor.fontGreatVibes')}` },
+    { value: 'Sacramento,"Brush Script MT",cursive', label: 'Sacramento' },
     { value: '"Playfair Display",Georgia,serif', label: `Playfair Display · ${t('editor.fontPlayfair')}` },
     { value: '"Cormorant Garamond",Garamond,serif', label: `Cormorant Garamond · ${t('editor.fontCormorant')}` },
+    { value: 'Cinzel,Georgia,serif', label: 'Cinzel' },
   ] },
   { group: t('editor.fontGroupJapanese'), items: [
+    { value: '"Noto Sans JP","Yu Gothic",sans-serif', label: 'Noto Sans JP' },
     { value: '"Noto Serif JP","Yu Mincho",serif', label: 'Noto Serif JP' },
     { value: '"Shippori Mincho","Yu Mincho",serif', label: 'Shippori Mincho' },
+    { value: '"Zen Kurenaido","Yu Mincho",serif', label: 'Zen Kurenaido' },
   ] },
   { group: t('editor.fontGroupKorean'), items: [
+    { value: '"Noto Sans KR","Apple SD Gothic Neo",sans-serif', label: 'Noto Sans KR' },
     { value: '"Noto Serif KR","AppleMyungjo",serif', label: 'Noto Serif KR' },
     { value: '"Gowun Batang","AppleMyungjo",serif', label: 'Gowun Batang' },
+    { value: '"Song Myung","AppleMyungjo",serif', label: 'Song Myung' },
   ] },
   ];
 }
@@ -259,7 +272,9 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
   const updateLayer = useEditorStore((state) => state.updateLayer);
   const headers = useEditorStore((state) => state.headers);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [csvField, setCsvField] = useState('');
+  const [csvDropdownOpened, setCsvDropdownOpened] = useState(false);
   const [indexWidth, setIndexWidth] = useState<number | string>(3);
   const update = (patch: Partial<TextLayer>) => updateLayer(layer.id, patch);
 
@@ -273,6 +288,16 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
       input?.focus();
       input?.setSelectionRange(start + token.length, start + token.length);
     });
+  };
+
+  const insertCsvToken = () => {
+    const field = csvField.trim();
+    if (field) insertToken(`{{csv.${field}}}`);
+  };
+
+  const insertIndexToken = () => {
+    const width = Math.max(1, Math.min(12, Number(indexWidth) || 1));
+    insertToken(`{{index:${width}}}`);
   };
 
   return (
@@ -296,26 +321,61 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
           </Button>
         ))}
       </div>
-      <TextInput
+      <Autocomplete
+        ref={csvInputRef}
         label={t('editor.csvAria')}
         value={csvField}
-        onChange={(event) => setCsvField(event.currentTarget.value)}
-        list={`csv-headers-${layer.id}`}
+        onChange={setCsvField}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+            event.preventDefault();
+            setCsvDropdownOpened(false);
+            insertCsvToken();
+          }
+        }}
+        data={headers}
+        dropdownOpened={csvDropdownOpened && headers.length > 0}
+        onDropdownOpen={() => headers.length > 0 && setCsvDropdownOpened(true)}
+        onDropdownClose={() => setCsvDropdownOpened(false)}
+        onOptionSubmit={() => setCsvDropdownOpened(false)}
         placeholder={t('editor.csvPlaceholder')}
         rightSectionPointerEvents="all"
-        rightSectionWidth={40}
+        rightSectionWidth={headers.length > 0 ? 72 : 40}
         rightSection={(
-          <Tooltip label={t('editor.csvInsert')}>
-            <ActionIcon className="input-insert-action" size="sm" variant="subtle" disabled={!csvField.trim()} aria-label={t('editor.csvInsert')} onClick={() => csvField.trim() && insertToken(`{{csv.${csvField.trim()}}}`)}>
-              <IconTransferOut size={17} />
-            </ActionIcon>
-          </Tooltip>
+          <Group className="csv-field-actions" gap={2} wrap="nowrap">
+            {headers.length > 0 && (
+              <ActionIcon
+                className="csv-suggestions-action"
+                size="sm"
+                variant="subtle"
+                aria-label={t('editor.csvAria')}
+                aria-expanded={csvDropdownOpened}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setCsvDropdownOpened((opened) => !opened);
+                  csvInputRef.current?.focus();
+                }}
+              >
+                <IconChevronDown className={csvDropdownOpened ? 'csv-field-chevron open' : 'csv-field-chevron'} size={17} />
+              </ActionIcon>
+            )}
+            <Tooltip label={t('editor.csvInsert')}>
+              <ActionIcon className="input-insert-action" size="sm" variant="subtle" disabled={!csvField.trim()} aria-label={t('editor.csvInsert')} onClick={insertCsvToken}>
+                <IconTransferOut size={17} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
         )}
       />
-      <datalist id={`csv-headers-${layer.id}`}>{headers.map((header) => <option key={header} value={header} />)}</datalist>
       <NumberInput
         value={indexWidth}
         onChange={setIndexWidth}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+            event.preventDefault();
+            insertIndexToken();
+          }
+        }}
         min={1}
         max={12}
         label={t('editor.indexDigits')}
@@ -324,7 +384,7 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
         rightSectionWidth={40}
         rightSection={(
           <Tooltip label={t('editor.indexInsert')}>
-            <ActionIcon className="input-insert-action" size="sm" variant="subtle" aria-label={t('editor.indexInsert')} onClick={() => insertToken(`{{index:${Math.max(1, Math.min(12, Number(indexWidth) || 1))}}}`)}>
+            <ActionIcon className="input-insert-action" size="sm" variant="subtle" aria-label={t('editor.indexInsert')} onClick={insertIndexToken}>
               <IconTransferOut size={17} />
             </ActionIcon>
           </Tooltip>
@@ -332,7 +392,15 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
       />
       <Helper>{t('editor.example')}</Helper>
 
-      <Select label={t('editor.font')} value={layer.font} onChange={(font) => font && update({ font })} data={fontOptions(t)} searchable />
+      <Select
+        label={t('editor.font')}
+        value={layer.font}
+        onChange={(font) => font && update({ font })}
+        data={fontOptions(t)}
+        allowDeselect={false}
+        styles={{ input: { fontFamily: layer.font } }}
+        renderOption={({ option }) => <span style={{ fontFamily: option.value }}>{option.label}</span>}
+      />
       <Helper>{t('editor.fontFallback')}</Helper>
 
       <NumberInput
@@ -431,7 +499,124 @@ function LayerEditor({ layer }: { layer: TextLayer }) {
   );
 }
 
-export function ControlPanel() {
+function DataPreviewTable({
+  records,
+  headers,
+  previewIndex,
+  onPreview,
+  expanded = false,
+  label,
+}: {
+  records: BatchRecord[];
+  headers: string[];
+  previewIndex: number;
+  onPreview: (index: number) => void;
+  expanded?: boolean;
+  label: string;
+}) {
+  const selectRow = (index: number) => onPreview(index);
+
+  return (
+    <ScrollArea
+      className={`data-table-wrap ${expanded ? 'data-table-expanded' : 'data-table-inline'}`}
+      type="auto"
+      scrollbars="xy"
+      offsetScrollbars="present"
+    >
+      <Table className="data-preview-table" striped highlightOnHover stickyHeader aria-label={label}>
+        <Table.Thead>
+          <Table.Tr><Table.Th>#</Table.Th>{headers.map((header) => <Table.Th key={header}>{header}</Table.Th>)}</Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {records.map((record, index) => (
+            <Table.Tr
+              key={index}
+              className={previewIndex === index ? 'preview-row' : undefined}
+              tabIndex={0}
+              aria-selected={previewIndex === index}
+              onClick={() => selectRow(index)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  selectRow(index);
+                }
+              }}
+            >
+              <Table.Td>{index + 1}</Table.Td>
+              {headers.map((header) => <Table.Td key={header}>{record[header]}</Table.Td>)}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </ScrollArea>
+  );
+}
+
+export function DataPreviewSidebar({ opened, onClose }: { opened: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const records = useEditorStore((state) => state.records);
+  const headers = useEditorStore((state) => state.headers);
+  const importedSignature = useEditorStore((state) => state.importedSignature);
+  const layers = useEditorStore((state) => state.layers);
+  const previewIndex = useEditorStore((state) => state.previewIndex);
+  const setPreviewIndex = useEditorStore((state) => state.setPreviewIndex);
+  const binding = useMemo(() => analyzeBindings(layers), [layers]);
+  const importedIsCurrent = records.length > 0 && importedSignature === binding.signature;
+  const title = translate(t, 'data.previewTitle', { count: records.length });
+
+  useEffect(() => {
+    if (opened && !importedIsCurrent) onClose();
+  }, [importedIsCurrent, onClose, opened]);
+
+  useEffect(() => {
+    if (!opened) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, opened]);
+
+  if (!opened || !importedIsCurrent) return null;
+
+  return (
+    <aside className="data-preview-sidebar" aria-label={title}>
+      <header className="data-preview-sidebar-header">
+        <Button
+          className="data-preview-sidebar-back"
+          variant="subtle"
+          size="compact-sm"
+          leftSection={<IconArrowLeft size={17} />}
+          onClick={onClose}
+        >
+          {t('data.closePreview')}
+        </Button>
+        <div className="data-preview-sidebar-heading">
+          <Text fw={700}>{title}</Text>
+          <Text size="xs" c="dimmed">{t('data.hint')}</Text>
+        </div>
+      </header>
+      <div className="data-preview-sidebar-body">
+        <DataPreviewTable
+          records={records}
+          headers={headers}
+          previewIndex={previewIndex}
+          onPreview={setPreviewIndex}
+          expanded
+          label={title}
+        />
+      </div>
+    </aside>
+  );
+}
+
+export function ControlPanel({
+  dataPreviewOpened,
+  onDataPreviewOpenedChange,
+}: {
+  dataPreviewOpened: boolean;
+  onDataPreviewOpenedChange: (opened: boolean) => void;
+}) {
   const { t } = useTranslation();
   const canvas = useEditorStore((state) => state.canvas);
   const background = useEditorStore((state) => state.background);
@@ -455,6 +640,7 @@ export function ControlPanel() {
   const selected = layers.find((layer) => layer.id === selectedId) ?? null;
   const binding = useMemo(() => analyzeBindings(layers), [layers]);
   const importedIsCurrent = records.length > 0 && importedSignature === binding.signature;
+  const compactDataPreview = useMediaQuery('(max-width: 1199px)', false, { getInitialValueInEffect: true });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [pendingTemplate, setPendingTemplate] = useState<ReturnType<typeof parseTemplateFile> | null>(null);
   const [resetOpened, setResetOpened] = useState(false);
@@ -604,18 +790,28 @@ export function ControlPanel() {
           </Menu>
         </div>
         <Helper>{t('data.hint')}</Helper>
-        <Text size="xs" c={binding.mode === 'conflict' ? 'red' : 'dimmed'}>{importStatus}</Text>
+        <div className="data-preview-toolbar">
+          <Text size="xs" c={binding.mode === 'conflict' ? 'red' : 'dimmed'}>{importStatus}</Text>
+          {importedIsCurrent ? (
+            <Button
+              className="data-preview-open"
+              variant="subtle"
+              size="compact-sm"
+              leftSection={<IconArrowsMaximize size={15} />}
+              onClick={() => onDataPreviewOpenedChange(true)}
+            >
+              {t('data.expandPreview')}
+            </Button>
+          ) : null}
+        </div>
         {importedIsCurrent ? (
-          <ScrollArea h={180} className="data-table-wrap">
-            <Table striped highlightOnHover stickyHeader>
-              <Table.Thead><Table.Tr><Table.Th>#</Table.Th>{headers.map((header) => <Table.Th key={header}>{header}</Table.Th>)}</Table.Tr></Table.Thead>
-              <Table.Tbody>{records.map((record, index) => (
-                <Table.Tr key={index} className={previewIndex === index ? 'preview-row' : undefined} tabIndex={0} onClick={() => setPreviewIndex(index)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setPreviewIndex(index); }}>
-                  <Table.Td>{index + 1}</Table.Td>{headers.map((header) => <Table.Td key={header}>{record[header]}</Table.Td>)}
-                </Table.Tr>
-              ))}</Table.Tbody>
-            </Table>
-          </ScrollArea>
+          <DataPreviewTable
+            records={records}
+            headers={headers}
+            previewIndex={previewIndex}
+            onPreview={setPreviewIndex}
+            label={translate(t, 'data.previewTitle', { count: records.length })}
+          />
         ) : null}
         {batchProgress !== null ? <Progress value={batchProgress * 100} animated /> : null}
         <Button leftSection={<IconFileZip size={17} />} disabled={!importedIsCurrent || batchProgress !== null} onClick={() => void exportBatch()}>
@@ -653,15 +849,34 @@ export function ControlPanel() {
           {formatCopyright(window.location.hostname)}
         </span>
         <nav className="site-footer-links" aria-label={t('footer.navigation')}>
-          <a href="/about">{t('footer.about')}</a>
-          <a href="/privacy">{t('footer.privacy')}</a>
-          <a href="/terms">{t('footer.terms')}</a>
+          <a href="/about.html">{t('footer.about')}</a>
+          <a href="/privacy.html">{t('footer.privacy')}</a>
+          <a href="/terms.html">{t('footer.terms')}</a>
           <a href="https://github.com/dofy/invite-maker/issues" target="_blank" rel="noreferrer">{t('footer.contact')}</a>
         </nav>
         <a className="site-footer-github" href={GITHUB_URL} target="_blank" rel="noreferrer" aria-label={t('footer.github')}>
           <IconBrandGithub size={14} stroke={1.8} />
         </a>
       </footer>
+
+      {compactDataPreview ? (
+        <Modal
+          opened={dataPreviewOpened && importedIsCurrent}
+          onClose={() => onDataPreviewOpenedChange(false)}
+          title={translate(t, 'data.previewTitle', { count: records.length })}
+          fullScreen
+          classNames={{ content: 'data-preview-modal-content', body: 'data-preview-modal-body' }}
+        >
+          <DataPreviewTable
+            records={records}
+            headers={headers}
+            previewIndex={previewIndex}
+            onPreview={setPreviewIndex}
+            expanded
+            label={translate(t, 'data.previewTitle', { count: records.length })}
+          />
+        </Modal>
+      ) : null}
 
       <Modal opened={deleteId !== null} onClose={() => setDeleteId(null)} title={t('modal.deleteTitle')} centered>
         <Text size="sm" c="dimmed">{t('modal.deleteBody')}</Text>

@@ -41,9 +41,16 @@ function invalidateDataWhenBindingsChange(
   nextLayers: TextLayer[],
   state: EditorState,
 ) {
-  const before = analyzeBindings(previousLayers).signature;
-  const after = analyzeBindings(nextLayers).signature;
-  if (before === after) return {};
+  const before = analyzeBindings(previousLayers);
+  const after = analyzeBindings(nextLayers);
+  if (before.signature === after.signature) return {};
+
+  const importedCsvStillMatches = state.records.length > 0
+    && state.importedSignature === before.signature
+    && after.mode === 'csv'
+    && after.fields.every((field) => state.headers.includes(field));
+  if (importedCsvStillMatches) return { importedSignature: after.signature };
+
   return { records: [], headers: [], importedSignature: '', previewIndex: 0 };
 }
 

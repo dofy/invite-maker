@@ -24,9 +24,11 @@ const colorSchemeManager = localStorageColorSchemeManager({ key: 'invite-maker-t
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Missing application root');
+rootElement.classList.add('app-loading');
 rootElement.replaceChildren();
 
 void initializeEditorPersistence().finally(() => {
+  rootElement.classList.remove('app-loading');
   createRoot(rootElement).render(
     <StrictMode>
       <MantineProvider theme={theme} defaultColorScheme="auto" colorSchemeManager={colorSchemeManager}>

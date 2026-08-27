@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => {
           cleanupOutdatedCaches: true,
           globPatterns: ['**/*.{html,js,css,csv,txt,ico,png,svg,webp,woff2,webmanifest}'],
           navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/(?:about|privacy|terms)(?:\.html)?$/],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
