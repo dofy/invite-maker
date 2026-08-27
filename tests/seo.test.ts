@@ -55,6 +55,23 @@ describe('static discovery and citation surface', () => {
       const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href');
       expect(canonical).toMatch(/^https:\/\/tsudoi\.yahaha\.net\/(about|privacy|terms)$/);
       expect(document.querySelector('a[href="https://github.com/dofy/invite-maker/issues"]')).not.toBeNull();
+      expect(document.querySelector('script[src="/legal.js"]')).not.toBeNull();
+      expect(document.querySelector('meta[name="theme-color"]')).not.toBeNull();
+      expect(document.querySelectorAll('#legal-language option')).toHaveLength(8);
+      expect(document.querySelectorAll('#legal-theme option')).toHaveLength(3);
     }
+  });
+
+  it('shares the editor language and theme preferences across trust pages', () => {
+    const legalRuntime = read('public/legal.js');
+    expect(legalRuntime).toContain("var LANGUAGE_KEY = 'invite-maker-language'");
+    expect(legalRuntime).toContain("var THEME_KEY = 'invite-maker-theme'");
+
+    for (const language of ['zh-CN', 'zh-TW', 'en', 'de', 'ja', 'ko', 'es', 'fr']) {
+      expect(legalRuntime).toMatch(new RegExp(`['"]?${language}['"]?:`));
+    }
+
+    expect(legalRuntime).toContain("window.addEventListener('storage'");
+    expect(read('public/legal.css')).toContain(':root[data-mantine-color-scheme="light"]');
   });
 });

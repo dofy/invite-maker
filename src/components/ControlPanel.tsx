@@ -1,51 +1,35 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import {
   Accordion,
   ActionIcon,
-  Autocomplete,
   Button,
-  ColorInput,
   Group,
   Menu,
   Modal,
   NumberInput,
   Progress,
-  ScrollArea,
   SegmentedControl,
-  Select,
   Stack,
-  Table,
   Text,
-  Textarea,
-  Tooltip,
   useComputedColorScheme,
   useMantineColorScheme,
   type MantineColorScheme,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useMediaQuery } from '@mantine/hooks';
 import {
-  IconAlignCenter,
-  IconAlignLeft,
-  IconAlignRight,
-  IconArrowLeft,
   IconArrowsMaximize,
   IconBrandGithub,
-  IconCalendar,
   IconCheck,
   IconChevronDown,
-  IconClock,
   IconCode,
   IconDatabase,
   IconDeviceDesktop,
   IconDownload,
-  IconFileDescription,
   IconFileDownload,
   IconFileImport,
   IconFileTypeCsv,
   IconFileTypeTxt,
   IconFileZip,
-  IconFingerprint,
   IconImageInPicture,
   IconLanguage,
   IconStack,
@@ -53,13 +37,9 @@ import {
   IconPlus,
   IconMoon,
   IconSun,
-  IconTransferOut,
   IconTrash,
-  IconTypography,
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
-import type { AnchorX, AnchorY, BatchRecord, HorizontalAlign, TextLayer } from '../model';
 import { analyzeBindings } from '../lib/template';
 import { importDataFile } from '../lib/data';
 import { buildTemplate, parseTemplateFile } from '../lib/template-json';
@@ -71,62 +51,41 @@ import { AppError, translateError } from '../lib/app-error';
 import { resolveLanguage, translate } from '../i18n';
 import type { AppLanguage, TranslationKey } from '../i18n/resources';
 import { useEditorStore } from '../store/editor';
+import { DataPreviewTable } from './DataPreview';
+import { LayerEditor } from './LayerEditor';
+import { Helper, SectionTitle } from './PanelPrimitives';
 import packageJson from '../../package.json';
 
 const GITHUB_URL = 'https://github.com/dofy/invite-maker';
 
-function fontOptions(t: TFunction) {
-  return [
-  { group: t('editor.fontGroupSystem'), items: [
-    { value: '"PingFang SC","Microsoft YaHei",sans-serif', label: t('editor.fontSystemSans') },
-    { value: '"Songti SC","SimSun",serif', label: t('editor.fontSystemSerif') },
-    { value: '"Kaiti SC","KaiTi",serif', label: t('editor.fontSystemKai') },
-    { value: 'Georgia,serif', label: 'Georgia' },
-    { value: '"Helvetica Neue",Arial,sans-serif', label: 'Helvetica' },
-    { value: '"Brush Script MT",cursive', label: t('editor.fontSystemScript') },
-  ] },
-  { group: t('editor.fontGroupChinese'), items: [
-    { value: '"Noto Sans SC","PingFang SC",sans-serif', label: 'Noto Sans SC' },
-    { value: '"Noto Sans TC","PingFang TC",sans-serif', label: 'Noto Sans TC' },
-    { value: '"Noto Serif SC","Songti SC",serif', label: 'Noto Serif SC' },
-    { value: '"Noto Serif TC","Songti TC",serif', label: 'Noto Serif TC' },
-    { value: '"LXGW WenKai","Kaiti SC",serif', label: 'LXGW WenKai' },
-    { value: '"Ma Shan Zheng","Kaiti SC",cursive', label: 'Ma Shan Zheng' },
-    { value: '"Long Cang","Kaiti SC",cursive', label: 'Long Cang' },
-    { value: '"ZCOOL XiaoWei","Songti SC",serif', label: 'ZCOOL XiaoWei' },
-  ] },
-  { group: t('editor.fontGroupLatin'), items: [
-    { value: 'Montserrat,"Helvetica Neue",sans-serif', label: 'Montserrat' },
-    { value: '"Great Vibes","Brush Script MT",cursive', label: `Great Vibes · ${t('editor.fontGreatVibes')}` },
-    { value: 'Sacramento,"Brush Script MT",cursive', label: 'Sacramento' },
-    { value: '"Playfair Display",Georgia,serif', label: `Playfair Display · ${t('editor.fontPlayfair')}` },
-    { value: '"Cormorant Garamond",Garamond,serif', label: `Cormorant Garamond · ${t('editor.fontCormorant')}` },
-    { value: 'Cinzel,Georgia,serif', label: 'Cinzel' },
-  ] },
-  { group: t('editor.fontGroupJapanese'), items: [
-    { value: '"Noto Sans JP","Yu Gothic",sans-serif', label: 'Noto Sans JP' },
-    { value: '"Noto Serif JP","Yu Mincho",serif', label: 'Noto Serif JP' },
-    { value: '"Shippori Mincho","Yu Mincho",serif', label: 'Shippori Mincho' },
-    { value: '"Zen Kurenaido","Yu Mincho",serif', label: 'Zen Kurenaido' },
-  ] },
-  { group: t('editor.fontGroupKorean'), items: [
-    { value: '"Noto Sans KR","Apple SD Gothic Neo",sans-serif', label: 'Noto Sans KR' },
-    { value: '"Noto Serif KR","AppleMyungjo",serif', label: 'Noto Serif KR' },
-    { value: '"Gowun Batang","AppleMyungjo",serif', label: 'Gowun Batang' },
-    { value: '"Song Myung","AppleMyungjo",serif', label: 'Song Myung' },
-  ] },
-  ];
-}
-
-function tokenOptions(t: TFunction) {
-  return [
-    { value: '{{txt}}', label: t('editor.tokenTxt'), icon: IconFileDescription },
-    { value: '{{date}}', label: t('editor.tokenDate'), icon: IconCalendar },
-    { value: '{{time}}', label: t('editor.tokenTime'), icon: IconClock },
-    { value: '{{datetime}}', label: t('editor.tokenDateTime'), icon: IconCalendar },
-    { value: '{{uuid}}', label: t('editor.tokenUuid'), icon: IconFingerprint },
-  ];
-}
+const LayerListItem = memo(function LayerListItem({
+  id,
+  index,
+  preview,
+  selected,
+  deleteLabel,
+  onSelect,
+  onDelete,
+}: {
+  id: string;
+  index: number;
+  preview: string;
+  selected: boolean;
+  deleteLabel: string;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className={selected ? 'layer-item active' : 'layer-item'}>
+      <button type="button" className="layer-select" onClick={() => onSelect(id)}>
+        <span>#{index + 1}</span><span className="layer-preview">{preview}</span>
+      </button>
+      <ActionIcon className="layer-delete" variant="subtle" color="red" aria-label={deleteLabel} onClick={() => onDelete(id)}>
+        <IconTrash size={16} />
+      </ActionIcon>
+    </div>
+  );
+});
 
 const LANGUAGE_OPTIONS: Array<{ value: AppLanguage; key: TranslationKey }> = [
   { value: 'zh-CN', key: 'language.zhCN' },
@@ -138,14 +97,6 @@ const LANGUAGE_OPTIONS: Array<{ value: AppLanguage; key: TranslationKey }> = [
   { value: 'es', key: 'language.es' },
   { value: 'fr', key: 'language.fr' },
 ];
-
-function SectionTitle({ icon: Icon, children }: { icon: typeof IconImageInPicture; children: React.ReactNode }) {
-  return <h2 className="section-title"><Icon size={15} stroke={1.8} /><span>{children}</span></h2>;
-}
-
-function Helper({ children }: { children: React.ReactNode }) {
-  return <Text className="helper" size="xs">{children}</Text>;
-}
 
 function LanguagePicker() {
   const { t, i18n } = useTranslation();
@@ -239,377 +190,6 @@ export function AppHeader() {
   );
 }
 
-function AnchorPicker({ layer, update }: { layer: TextLayer; update: (patch: Partial<TextLayer>) => void }) {
-  const { t } = useTranslation();
-  const xs: AnchorX[] = ['left', 'center', 'right'];
-  const ys: AnchorY[] = ['top', 'center', 'bottom'];
-  const horizontalLabel = (value: AnchorX) => t(value === 'left' ? 'editor.anchorLeft' : value === 'right' ? 'editor.anchorRight' : 'editor.anchorCenter');
-  const verticalLabel = (value: AnchorY) => t(value === 'top' ? 'editor.anchorTop' : value === 'bottom' ? 'editor.anchorBottom' : 'editor.anchorCenter');
-  return (
-    <div className="anchor-picker" role="radiogroup" aria-label={t('editor.anchor')}>
-      {ys.flatMap((y) => xs.map((x) => {
-        const active = layer.anchorX === x && layer.anchorY === y;
-        return (
-          <button
-            type="button"
-            key={`${x}-${y}`}
-            className={active ? 'anchor-button active' : 'anchor-button'}
-            role="radio"
-            aria-checked={active}
-            aria-label={translate(t, 'editor.anchorAria', { horizontal: horizontalLabel(x), vertical: verticalLabel(y) })}
-            onClick={() => update({ anchorX: x, anchorY: y })}
-          >
-            <span className={`anchor-symbol x-${x} y-${y}`} />
-          </button>
-        );
-      }))}
-    </div>
-  );
-}
-
-function LayerEditor({ layer }: { layer: TextLayer }) {
-  const { t } = useTranslation();
-  const updateLayer = useEditorStore((state) => state.updateLayer);
-  const headers = useEditorStore((state) => state.headers);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const csvInputRef = useRef<HTMLInputElement>(null);
-  const [csvField, setCsvField] = useState('');
-  const [csvDropdownOpened, setCsvDropdownOpened] = useState(false);
-  const [indexWidth, setIndexWidth] = useState<number | string>(3);
-  const update = (patch: Partial<TextLayer>) => updateLayer(layer.id, patch);
-
-  const insertToken = (token: string) => {
-    const input = textareaRef.current;
-    const start = input?.selectionStart ?? layer.text.length;
-    const end = input?.selectionEnd ?? start;
-    const next = `${layer.text.slice(0, start)}${token}${layer.text.slice(end)}`;
-    update({ text: next });
-    requestAnimationFrame(() => {
-      input?.focus();
-      input?.setSelectionRange(start + token.length, start + token.length);
-    });
-  };
-
-  const insertCsvToken = () => {
-    const field = csvField.trim();
-    if (field) insertToken(`{{csv.${field}}}`);
-  };
-
-  const insertIndexToken = () => {
-    const width = Math.max(1, Math.min(12, Number(indexWidth) || 1));
-    insertToken(`{{index:${width}}}`);
-  };
-
-  return (
-    <section className="panel-section">
-      <SectionTitle icon={IconTypography}>{t('section.editor')}</SectionTitle>
-      <Textarea
-        ref={textareaRef}
-        value={layer.text}
-        onChange={(event) => update({ text: event.currentTarget.value })}
-        autosize
-        minRows={2}
-        maxRows={8}
-        aria-label={t('editor.textAria')}
-        placeholder={t('editor.textPlaceholder')}
-      />
-      <Helper>{t('editor.tokenHelp')}</Helper>
-      <div className="token-grid">
-        {tokenOptions(t).map(({ value, label, icon: Icon }) => (
-          <Button key={value} variant="subtle" size="compact-sm" leftSection={<Icon size={14} />} onClick={() => insertToken(value)}>
-            {label}
-          </Button>
-        ))}
-      </div>
-      <Autocomplete
-        ref={csvInputRef}
-        label={t('editor.csvAria')}
-        value={csvField}
-        onChange={setCsvField}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-            event.preventDefault();
-            setCsvDropdownOpened(false);
-            insertCsvToken();
-          }
-        }}
-        data={headers}
-        dropdownOpened={csvDropdownOpened && headers.length > 0}
-        onDropdownOpen={() => headers.length > 0 && setCsvDropdownOpened(true)}
-        onDropdownClose={() => setCsvDropdownOpened(false)}
-        onOptionSubmit={() => setCsvDropdownOpened(false)}
-        placeholder={t('editor.csvPlaceholder')}
-        rightSectionPointerEvents="all"
-        rightSectionWidth={headers.length > 0 ? 72 : 40}
-        rightSection={(
-          <Group className="csv-field-actions" gap={2} wrap="nowrap">
-            {headers.length > 0 && (
-              <ActionIcon
-                className="csv-suggestions-action"
-                size="sm"
-                variant="subtle"
-                aria-label={t('editor.csvAria')}
-                aria-expanded={csvDropdownOpened}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  setCsvDropdownOpened((opened) => !opened);
-                  csvInputRef.current?.focus();
-                }}
-              >
-                <IconChevronDown className={csvDropdownOpened ? 'csv-field-chevron open' : 'csv-field-chevron'} size={17} />
-              </ActionIcon>
-            )}
-            <Tooltip label={t('editor.csvInsert')}>
-              <ActionIcon className="input-insert-action" size="sm" variant="subtle" disabled={!csvField.trim()} aria-label={t('editor.csvInsert')} onClick={insertCsvToken}>
-                <IconTransferOut size={17} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-        )}
-      />
-      <NumberInput
-        value={indexWidth}
-        onChange={setIndexWidth}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-            event.preventDefault();
-            insertIndexToken();
-          }
-        }}
-        min={1}
-        max={12}
-        label={t('editor.indexDigits')}
-        hideControls
-        rightSectionPointerEvents="all"
-        rightSectionWidth={40}
-        rightSection={(
-          <Tooltip label={t('editor.indexInsert')}>
-            <ActionIcon className="input-insert-action" size="sm" variant="subtle" aria-label={t('editor.indexInsert')} onClick={insertIndexToken}>
-              <IconTransferOut size={17} />
-            </ActionIcon>
-          </Tooltip>
-        )}
-      />
-      <Helper>{t('editor.example')}</Helper>
-
-      <Select
-        label={t('editor.font')}
-        value={layer.font}
-        onChange={(font) => font && update({ font })}
-        data={fontOptions(t)}
-        allowDeselect={false}
-        styles={{ input: { fontFamily: layer.font } }}
-        renderOption={({ option }) => <span style={{ fontFamily: option.value }}>{option.label}</span>}
-      />
-      <Helper>{t('editor.fontFallback')}</Helper>
-
-      <NumberInput
-        label={t('editor.fontSize')}
-        suffix=" px"
-        min={8}
-        max={2_000}
-        step={1}
-        hideControls
-        clampBehavior="strict"
-        value={Math.round(layer.size)}
-        onChange={(value) => {
-          const size = Number(value);
-          if (Number.isFinite(size) && size >= 8 && size <= 2_000) update({ size });
-        }}
-      />
-
-      <Select
-        label={t('editor.fontWeight')}
-        value={layer.weight}
-        onChange={(weight) => weight && update({ weight })}
-        data={[{ value: '300', label: t('editor.weightLight') }, { value: '400', label: t('editor.weightRegular') }, { value: '600', label: t('editor.weightSemibold') }, { value: '700', label: t('editor.weightBold') }]}
-      />
-
-      <div className="paired-controls">
-        <ColorInput label={t('editor.color')} value={layer.color} onChange={(color) => update({ color })} format="hex" />
-        <div>
-          <Text component="label" size="sm" fw={600}>{t('editor.alignment')}</Text>
-          <SegmentedControl
-            fullWidth
-            value={layer.align}
-            onChange={(align) => update({ align: align as HorizontalAlign })}
-            aria-label={t('editor.alignmentAria')}
-            data={[
-              { value: 'left', label: <IconAlignLeft size={17} aria-label={t('editor.alignLeft')} /> },
-              { value: 'center', label: <IconAlignCenter size={17} aria-label={t('editor.alignCenter')} /> },
-              { value: 'right', label: <IconAlignRight size={17} aria-label={t('editor.alignRight')} /> },
-            ]}
-          />
-        </div>
-      </div>
-
-      <div className="labeled-control">
-        <Text component="label" size="sm" fw={600}>{t('editor.anchor')}</Text>
-        <AnchorPicker layer={layer} update={update} />
-      </div>
-      <Helper>{t('editor.anchorHelp')}</Helper>
-
-      <div className="width-row">
-        <Select
-          className="width-mode-select"
-          classNames={{ option: 'width-mode-option' }}
-          label={t('editor.width')}
-          value={layer.width === null ? 'auto' : 'fixed'}
-          onChange={(mode) => update({ width: mode === 'fixed' ? layer.width ?? 320 : null })}
-          data={[{ value: 'auto', label: t('editor.widthAuto') }, { value: 'fixed', label: t('editor.widthFixed') }]}
-          allowDeselect={false}
-        />
-        <NumberInput
-          label={t('editor.pixels')}
-          suffix=" px"
-          min={40}
-          max={20_000}
-          disabled={layer.width === null}
-          value={layer.width ?? 320}
-          onChange={(value) => update({ width: Math.max(40, Number(value) || 320) })}
-        />
-      </div>
-      <Helper>{t('editor.resizeHelp')}</Helper>
-
-      <div className="style-fields">
-        <Text component="label" htmlFor={`letter-spacing-${layer.id}`} size="sm" fw={600}>{t('editor.letterSpacing')}</Text>
-        <NumberInput
-          id={`letter-spacing-${layer.id}`}
-          aria-label={t('editor.letterSpacing')}
-          suffix=" px"
-          min={-5}
-          max={30}
-          value={layer.spacing}
-          onChange={(value) => update({ spacing: Math.max(-5, Math.min(30, Number(value) || 0)) })}
-        />
-        <Text component="label" htmlFor={`stroke-color-${layer.id}`} size="sm" fw={600}>{t('editor.stroke')}</Text>
-        <ColorInput id={`stroke-color-${layer.id}`} aria-label={t('editor.stroke')} value={layer.stroke} onChange={(stroke) => update({ stroke })} format="hex" />
-        <Text component="label" htmlFor={`stroke-width-${layer.id}`} size="sm" fw={600}>{t('editor.strokeWidth')}</Text>
-        <NumberInput
-          id={`stroke-width-${layer.id}`}
-          aria-label={t('editor.strokeWidth')}
-          suffix=" px"
-          min={0}
-          max={10}
-          value={layer.strokeW}
-          onChange={(value) => update({ strokeW: Math.max(0, Math.min(10, Number(value) || 0)) })}
-        />
-      </div>
-    </section>
-  );
-}
-
-function DataPreviewTable({
-  records,
-  headers,
-  previewIndex,
-  onPreview,
-  expanded = false,
-  label,
-}: {
-  records: BatchRecord[];
-  headers: string[];
-  previewIndex: number;
-  onPreview: (index: number) => void;
-  expanded?: boolean;
-  label: string;
-}) {
-  const selectRow = (index: number) => onPreview(index);
-
-  return (
-    <ScrollArea
-      className={`data-table-wrap ${expanded ? 'data-table-expanded' : 'data-table-inline'}`}
-      type="auto"
-      scrollbars="xy"
-      offsetScrollbars="present"
-    >
-      <Table className="data-preview-table" striped highlightOnHover stickyHeader aria-label={label}>
-        <Table.Thead>
-          <Table.Tr><Table.Th>#</Table.Th>{headers.map((header) => <Table.Th key={header}>{header}</Table.Th>)}</Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {records.map((record, index) => (
-            <Table.Tr
-              key={index}
-              className={previewIndex === index ? 'preview-row' : undefined}
-              tabIndex={0}
-              aria-selected={previewIndex === index}
-              onClick={() => selectRow(index)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  selectRow(index);
-                }
-              }}
-            >
-              <Table.Td>{index + 1}</Table.Td>
-              {headers.map((header) => <Table.Td key={header}>{record[header]}</Table.Td>)}
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </ScrollArea>
-  );
-}
-
-export function DataPreviewSidebar({ opened, onClose }: { opened: boolean; onClose: () => void }) {
-  const { t } = useTranslation();
-  const records = useEditorStore((state) => state.records);
-  const headers = useEditorStore((state) => state.headers);
-  const importedSignature = useEditorStore((state) => state.importedSignature);
-  const layers = useEditorStore((state) => state.layers);
-  const previewIndex = useEditorStore((state) => state.previewIndex);
-  const setPreviewIndex = useEditorStore((state) => state.setPreviewIndex);
-  const binding = useMemo(() => analyzeBindings(layers), [layers]);
-  const importedIsCurrent = records.length > 0 && importedSignature === binding.signature;
-  const title = translate(t, 'data.previewTitle', { count: records.length });
-
-  useEffect(() => {
-    if (opened && !importedIsCurrent) onClose();
-  }, [importedIsCurrent, onClose, opened]);
-
-  useEffect(() => {
-    if (!opened) return undefined;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, opened]);
-
-  if (!opened || !importedIsCurrent) return null;
-
-  return (
-    <aside className="data-preview-sidebar" aria-label={title}>
-      <header className="data-preview-sidebar-header">
-        <Button
-          className="data-preview-sidebar-back"
-          variant="subtle"
-          size="compact-sm"
-          leftSection={<IconArrowLeft size={17} />}
-          onClick={onClose}
-        >
-          {t('data.closePreview')}
-        </Button>
-        <div className="data-preview-sidebar-heading">
-          <Text fw={700}>{title}</Text>
-          <Text size="xs" c="dimmed">{t('data.hint')}</Text>
-        </div>
-      </header>
-      <div className="data-preview-sidebar-body">
-        <DataPreviewTable
-          records={records}
-          headers={headers}
-          previewIndex={previewIndex}
-          onPreview={setPreviewIndex}
-          expanded
-          label={title}
-        />
-      </div>
-    </aside>
-  );
-}
-
 export function ControlPanel({
   dataPreviewOpened,
   onDataPreviewOpenedChange,
@@ -640,7 +220,6 @@ export function ControlPanel({
   const selected = layers.find((layer) => layer.id === selectedId) ?? null;
   const binding = useMemo(() => analyzeBindings(layers), [layers]);
   const importedIsCurrent = records.length > 0 && importedSignature === binding.signature;
-  const compactDataPreview = useMediaQuery('(max-width: 1199px)', false, { getInitialValueInEffect: true });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [pendingTemplate, setPendingTemplate] = useState<ReturnType<typeof parseTemplateFile> | null>(null);
   const [resetOpened, setResetOpened] = useState(false);
@@ -747,12 +326,16 @@ export function ControlPanel({
         <Button leftSection={<IconPlus size={17} />} onClick={() => addLayer(t('layers.defaultText'))}>{t('layers.add')}</Button>
         <Stack gap={6}>
           {layers.map((layer, index) => (
-            <button type="button" className={selectedId === layer.id ? 'layer-item active' : 'layer-item'} key={layer.id} onClick={() => selectLayer(layer.id)}>
-              <span>#{index + 1}</span><span className="layer-preview">{layer.text || t('layers.empty')}</span>
-              <ActionIcon component="span" variant="subtle" color="red" aria-label={translate(t, 'layers.deleteAria', { index: index + 1 })} onClick={(event) => { event.stopPropagation(); setDeleteId(layer.id); }}>
-                <IconTrash size={16} />
-              </ActionIcon>
-            </button>
+            <LayerListItem
+              key={layer.id}
+              id={layer.id}
+              index={index}
+              preview={layer.text || t('layers.empty')}
+              selected={selectedId === layer.id}
+              deleteLabel={translate(t, 'layers.deleteAria', { index: index + 1 })}
+              onSelect={selectLayer}
+              onDelete={setDeleteId}
+            />
           ))}
         </Stack>
       </section>
@@ -804,7 +387,7 @@ export function ControlPanel({
             </Button>
           ) : null}
         </div>
-        {importedIsCurrent ? (
+        {importedIsCurrent && !dataPreviewOpened ? (
           <DataPreviewTable
             records={records}
             headers={headers}
@@ -858,25 +441,6 @@ export function ControlPanel({
           <IconBrandGithub size={14} stroke={1.8} />
         </a>
       </footer>
-
-      {compactDataPreview ? (
-        <Modal
-          opened={dataPreviewOpened && importedIsCurrent}
-          onClose={() => onDataPreviewOpenedChange(false)}
-          title={translate(t, 'data.previewTitle', { count: records.length })}
-          fullScreen
-          classNames={{ content: 'data-preview-modal-content', body: 'data-preview-modal-body' }}
-        >
-          <DataPreviewTable
-            records={records}
-            headers={headers}
-            previewIndex={previewIndex}
-            onPreview={setPreviewIndex}
-            expanded
-            label={translate(t, 'data.previewTitle', { count: records.length })}
-          />
-        </Modal>
-      ) : null}
 
       <Modal opened={deleteId !== null} onClose={() => setDeleteId(null)} title={t('modal.deleteTitle')} centered>
         <Text size="sm" c="dimmed">{t('modal.deleteBody')}</Text>

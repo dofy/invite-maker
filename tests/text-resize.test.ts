@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   horizontalResizeHandles,
   reanchorPoint,
+  resolveResizeHandleRelease,
   snapResizeWidth,
   usesCenteredResize,
 } from '../src/lib/text-resize';
@@ -67,5 +68,47 @@ describe('anchored text resizing', () => {
       anchorX: 'left', anchorPointX: 100, width: 180, activeHandle: 'middle-right',
       targets: [300], threshold: 7,
     })).toEqual({ width: 180, guideX: null });
+  });
+
+  it('resets fixed width only after two stationary clicks', () => {
+    const first = resolveResizeHandleRelease({
+      previous: null,
+      handle: 'middle-right',
+      time: 100,
+      moved: false,
+      fixedWidth: true,
+      doubleClickWindow: 400,
+    });
+    expect(first).toEqual({ next: { handle: 'middle-right', time: 100 }, reset: false });
+    expect(resolveResizeHandleRelease({
+      previous: first.next,
+      handle: 'middle-right',
+      time: 300,
+      moved: false,
+      fixedWidth: true,
+      doubleClickWindow: 400,
+    })).toEqual({ next: null, reset: true });
+  });
+
+  it('does not treat consecutive resize drags as a double click', () => {
+    expect(resolveResizeHandleRelease({
+      previous: { handle: 'middle-right', time: 100 },
+      handle: 'middle-right',
+      time: 200,
+      moved: true,
+      fixedWidth: true,
+      doubleClickWindow: 400,
+    })).toEqual({ next: null, reset: false });
+  });
+
+  it('does not retain clicks while width follows content', () => {
+    expect(resolveResizeHandleRelease({
+      previous: { handle: 'middle-right', time: 100 },
+      handle: 'middle-right',
+      time: 200,
+      moved: false,
+      fixedWidth: false,
+      doubleClickWindow: 400,
+    })).toEqual({ next: null, reset: false });
   });
 });

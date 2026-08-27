@@ -3,6 +3,36 @@ import { anchorOffsetX, anchorOffsetY } from './render';
 
 export type HorizontalResizeHandle = 'middle-left' | 'middle-right';
 
+export interface ResizeHandleClick {
+  handle: HorizontalResizeHandle;
+  time: number;
+}
+
+interface ResizeHandleReleaseOptions {
+  previous: ResizeHandleClick | null;
+  handle: HorizontalResizeHandle;
+  time: number;
+  moved: boolean;
+  fixedWidth: boolean;
+  doubleClickWindow: number;
+}
+
+/** Distinguish a deliberate double click from two resize drags close together. */
+export function resolveResizeHandleRelease({
+  previous,
+  handle,
+  time,
+  moved,
+  fixedWidth,
+  doubleClickWindow,
+}: ResizeHandleReleaseOptions): { next: ResizeHandleClick | null; reset: boolean } {
+  if (moved || !fixedWidth) return { next: null, reset: false };
+  if (previous && previous.handle === handle && time - previous.time <= doubleClickWindow) {
+    return { next: null, reset: true };
+  }
+  return { next: { handle, time }, reset: false };
+}
+
 interface ResizeSnapOptions {
   anchorX: AnchorX;
   anchorPointX: number;

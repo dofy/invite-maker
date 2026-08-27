@@ -3,25 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0c0e12" />
     <meta name="description" content="Tsudoi 使用条款：说明工具用途、用户内容责任、本地数据处理、服务可用性、功能变更和问题反馈渠道。" />
     <meta name="robots" content="index, follow" />
     <title>Tsudoi 使用条款｜在线邀请函生成工具</title>
     <link rel="canonical" href="https://tsudoi.yahaha.net/terms" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      (function () {
+        document.documentElement.classList.add('js');
+        try {
+          var language = localStorage.getItem('invite-maker-language');
+          var browserLanguage = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+          var candidate = (language || browserLanguage).replace('_', '-').toLowerCase();
+          var resolvedLanguage = candidate === 'zh-tw' || candidate === 'zh-hk' || candidate === 'zh-mo' || candidate.indexOf('zh-hant') === 0
+            ? 'zh-TW'
+            : candidate === 'zh-cn' || candidate === 'zh-sg' || candidate === 'zh' || candidate.indexOf('zh-hans') === 0
+              ? 'zh-CN'
+              : ['en', 'de', 'ja', 'ko', 'es', 'fr'].indexOf(candidate.split('-')[0]) >= 0 ? candidate.split('-')[0] : 'en';
+          var theme = localStorage.getItem('invite-maker-theme') || 'auto';
+          var resolvedTheme = theme === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+          document.documentElement.lang = resolvedLanguage;
+          document.documentElement.setAttribute('data-mantine-color-scheme', resolvedTheme === 'dark' ? 'dark' : 'light');
+        } catch (_error) {}
+      })();
+    </script>
     <link rel="stylesheet" href="/legal.css" />
+    <script defer src="/legal.js"></script>
   </head>
-  <body>
+  <body data-legal-page="terms">
     <div class="page-shell">
       <header class="page-header">
         <a class="brand" href="/"><img src="/favicon.svg" alt="" />Tsudoi</a>
-        <nav class="page-nav" aria-label="站点信息">
-          <a href="/about.html">关于</a>
-          <a href="/privacy.html">隐私</a>
-          <a href="/terms.html" aria-current="page">条款</a>
-          <a href="https://github.com/dofy/invite-maker/issues">联系</a>
-        </nav>
+        <div class="header-tools">
+          <nav class="page-nav" aria-label="站点信息">
+            <a href="/about.html" data-common="about">关于</a>
+            <a href="/privacy.html" data-common="privacy">隐私</a>
+            <a href="/terms.html" aria-current="page" data-common="terms">条款</a>
+            <a href="https://github.com/dofy/invite-maker/issues" data-common="contact">联系</a>
+          </nav>
+          <div class="page-preferences">
+            <label class="preference-field">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h7M7.5 3v2c0 4-2 7-5 9m3-5c1.5 2.5 3.5 4.5 6 6M14 20l4-10 4 10m-6.5-4h5"/></svg>
+              <select id="legal-language" aria-label="语言">
+                <option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="de">Deutsch</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option>
+              </select>
+            </label>
+            <label class="preference-field">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42M18.36 5.64l-1.42 1.42M7.06 16.94l-1.42 1.42"/><circle cx="12" cy="12" r="4"/></svg>
+              <select id="legal-theme" aria-label="主题">
+                <option value="auto" data-common="auto">自动</option><option value="light" data-common="light">浅色</option><option value="dark" data-common="dark">深色</option>
+              </select>
+            </label>
+          </div>
+        </div>
       </header>
-      <main>
+      <main id="legal-content">
         <h1>使用条款</h1>
         <p class="meta">生效日期：<time datetime="2026-08-27">2026-08-27</time></p>
         <p class="lede">使用 Tsudoi 即表示你同意在合法、谨慎且尊重他人权利的前提下使用本工具。</p>
@@ -49,7 +87,7 @@
           <p>Use Tsudoi lawfully and only with content and data you are entitled to process. You are responsible for reviewing generated images before distribution and for protecting source materials. The tool is provided as-is, and browser, device, font, or file differences may affect output.</p>
         </section>
       </main>
-      <footer><span>© 2026 Tsudoi</span><a href="/">返回编辑器</a></footer>
+      <footer><span>© 2026 Tsudoi</span><a href="/" data-common="back">返回编辑器</a></footer>
     </div>
   </body>
 </html>

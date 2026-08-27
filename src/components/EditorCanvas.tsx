@@ -9,9 +9,11 @@ import { applyAnchorOffset, textNodeConfig } from '../lib/render';
 import {
   horizontalResizeHandles,
   reanchorPoint,
+  resolveResizeHandleRelease,
   snapResizeWidth,
   usesCenteredResize,
   type HorizontalResizeHandle,
+  type ResizeHandleClick,
 } from '../lib/text-resize';
 import type { TextLayer } from '../model';
 
@@ -68,7 +70,9 @@ function CanvasText({
   const transformerRef = useRef<Konva.Transformer>(null);
   const anchorMarkerRef = useRef<Konva.Group>(null);
   const resizeWidthRef = useRef<number | null>(null);
-  const lastHandlePressRef = useRef<{ handle: HorizontalResizeHandle; time: number } | null>(null);
+  const resizeMovedRef = useRef(false);
+  const lastHandleClickRef = useRef<ResizeHandleClick | null>(null);
+  const releaseListenerCleanupRef = useRef<() => void>(() => undefined);
   const previousAnchorRef = useRef({ x: layer.anchorX, y: layer.anchorY });
   const canvas = useMemo(() => ({ width: canvasWidth, height: canvasHeight, padding: 0 }), [canvasWidth, canvasHeight]);
 
@@ -110,6 +114,8 @@ function CanvasText({
     transformer.nodes([node]);
     transformer.getLayer()?.batchDraw();
   }, [selected, layer.width]);
+
+  useLayoutEffect(() => () => releaseListenerCleanupRef.current(), []);
 
   const resizeWithoutStretching = (event?: Konva.KonvaEventObject<Event>) => {
     const node = nodeRef.current;
@@ -168,10 +174,9 @@ function CanvasText({
     useEditorStore.getState().updateLayer(layer.id, { width: nextWidth });
   };
 
-  const resetWidthToContent = (event: Konva.KonvaEventObject<Event>) => {
-    const handle = event.target.name().split(' ')[0] as HorizontalResizeHandle;
-    if (layer.width === null || !horizontalResizeHandles(layer.anchorX).includes(handle)) return;
-    event.cancelBubble = true;
+  const resetWidthToContent = (handle: HorizontalResizeHandle) => {
+    const currentLayer = useEditorStore.getState().layers.find((item) => item.id === layer.id);
+    if (!currentLayer || currentLayer.width === null || !horizontalResizeHandles(currentLayer.anchorX).includes(handle)) return;
     resizeWidthRef.current = null;
     onGuide(null, null);
     useEditorStore.getState().updateLayer(layer.id, { width: null });
@@ -180,14 +185,52 @@ function CanvasText({
   const handleResizePress = (event: Konva.KonvaEventObject<Event>) => {
     const handle = event.target.name().split(' ')[0] as HorizontalResizeHandle;
     if (!horizontalResizeHandles(layer.anchorX).includes(handle)) return;
-    const time = performance.now();
-    const previous = lastHandlePressRef.current;
-    lastHandlePressRef.current = { handle, time };
-    if (layer.width === null || !previous || previous.handle !== handle || time - previous.time > Konva.dblClickWindow) return;
-    lastHandlePressRef.current = null;
-    event.cancelBubble = true;
-    transformerRef.current?.stopTransform();
-    resetWidthToContent(event);
+    resizeMovedRef.current = false;
+    releaseListenerCleanupRef.current();
+
+    const nativeEvent = event.evt;
+    const isTouch = 'touches' in nativeEvent;
+    const touchEvent = nativeEvent as TouchEvent;
+    const startPoint = isTouch
+      ? { x: touchEvent.touches[0]?.clientX ?? 0, y: touchEvent.touches[0]?.clientY ?? 0 }
+      : { x: (nativeEvent as MouseEvent).clientX, y: (nativeEvent as MouseEvent).clientY };
+    const finish = (releaseEvent: MouseEvent | TouchEvent) => {
+      releaseListenerCleanupRef.current();
+      const releasePoint = 'changedTouches' in releaseEvent
+        ? { x: releaseEvent.changedTouches[0]?.clientX ?? startPoint.x, y: releaseEvent.changedTouches[0]?.clientY ?? startPoint.y }
+        : { x: releaseEvent.clientX, y: releaseEvent.clientY };
+      const moved = resizeMovedRef.current
+        || Math.hypot(releasePoint.x - startPoint.x, releasePoint.y - startPoint.y) > 4;
+      const currentLayer = useEditorStore.getState().layers.find((item) => item.id === layer.id);
+      const result = resolveResizeHandleRelease({
+        previous: lastHandleClickRef.current,
+        handle,
+        time: performance.now(),
+        moved,
+        fixedWidth: currentLayer?.width !== null && currentLayer?.width !== undefined,
+        doubleClickWindow: Konva.dblClickWindow,
+      });
+      lastHandleClickRef.current = result.next;
+      if (result.reset) resetWidthToContent(handle);
+    };
+
+    if (isTouch) {
+      const cancel = () => {
+        releaseListenerCleanupRef.current();
+        lastHandleClickRef.current = null;
+      };
+      const cleanup = () => {
+        window.removeEventListener('touchend', finish, true);
+        window.removeEventListener('touchcancel', cancel, true);
+      };
+      releaseListenerCleanupRef.current = cleanup;
+      window.addEventListener('touchend', finish, { capture: true, once: true });
+      window.addEventListener('touchcancel', cancel, { capture: true, once: true });
+    } else {
+      const cleanup = () => window.removeEventListener('mouseup', finish, true);
+      releaseListenerCleanupRef.current = cleanup;
+      window.addEventListener('mouseup', finish, { capture: true, once: true });
+    }
   };
 
   const handleSize = 10 / Math.max(scale, 0.01);
@@ -250,8 +293,8 @@ function CanvasText({
           anchorStroke="#4f9bd4"
           anchorStrokeWidth={1 / Math.max(scale, 0.01)}
           boundBoxFunc={(oldBox, newBox) => newBox.width < 40 ? oldBox : newBox}
-          onTransformStart={() => { resizeWidthRef.current = null; onGuide(null, null); }}
-          onTransform={resizeWithoutStretching}
+          onTransformStart={() => { resizeWidthRef.current = null; resizeMovedRef.current = false; onGuide(null, null); }}
+          onTransform={(event) => { resizeMovedRef.current = true; resizeWithoutStretching(event); }}
           onTransformEnd={finishTransform}
         />
       ) : null}
@@ -314,8 +357,10 @@ export function EditorCanvas() {
     uuidByLayer: previewUuids.current.get(activeRecordIndex),
   };
 
-  const baseTargetsX = [0, canvas.padding, canvas.width / 2, canvas.width - canvas.padding, canvas.width];
-  const baseTargetsY = [0, canvas.padding, canvas.height / 2, canvas.height - canvas.padding, canvas.height];
+  const baseTargets = useMemo(() => ({
+    x: [0, canvas.padding, canvas.width / 2, canvas.width - canvas.padding, canvas.width],
+    y: [0, canvas.padding, canvas.height / 2, canvas.height - canvas.padding, canvas.height],
+  }), [canvas.height, canvas.padding, canvas.width]);
 
   return (
     <main className="canvas-shell" ref={ref}>
@@ -350,8 +395,8 @@ export function EditorCanvas() {
                 canvasWidth={canvas.width}
                 canvasHeight={canvas.height}
                 scale={scale}
-                targetsX={[...baseTargetsX, ...layers.filter((item) => item.id !== layer.id).map((item) => item.xPct / 100 * canvas.width)]}
-                targetsY={[...baseTargetsY, ...layers.filter((item) => item.id !== layer.id).map((item) => item.yPct / 100 * canvas.height)]}
+                targetsX={baseTargets.x}
+                targetsY={baseTargets.y}
                 onSelect={() => selectLayer(layer.id)}
                 onGuide={(x, y) => setGuide({ x, y })}
                 onMove={(x, y) => updateLayer(layer.id, {

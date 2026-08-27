@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { EditorCanvas } from './components/EditorCanvas';
-import { AppHeader, ControlPanel, DataPreviewSidebar } from './components/ControlPanel';
+import { AppHeader, ControlPanel } from './components/ControlPanel';
+import { ExpandedDataPreview } from './components/DataPreview';
 
 export default function App() {
   const [dataPreviewOpened, setDataPreviewOpened] = useState(false);
+  const closeDataPreview = useCallback(() => setDataPreviewOpened(false), []);
 
   return (
     <div className={`app-shell${dataPreviewOpened ? ' data-preview-opened' : ''}`}>
@@ -13,10 +15,7 @@ export default function App() {
         dataPreviewOpened={dataPreviewOpened}
         onDataPreviewOpenedChange={setDataPreviewOpened}
       />
-      <DataPreviewSidebar
-        opened={dataPreviewOpened}
-        onClose={() => setDataPreviewOpened(false)}
-      />
+      {dataPreviewOpened ? <ExpandedDataPreview onClose={closeDataPreview} /> : null}
     </div>
   );
 }
