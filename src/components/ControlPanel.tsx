@@ -62,6 +62,7 @@ import { importDataFile } from '../lib/data';
 import { buildTemplate, parseTemplateFile } from '../lib/template-json';
 import { downloadBlob, renderBatchZip, renderInvitationBlob } from '../lib/render';
 import { backgroundFromFile, releaseBackground } from '../lib/image-file';
+import { clearEditorPersistence } from '../lib/editor-persistence';
 import { formatCopyright } from '../lib/copyright';
 import { AppError, translateError } from '../lib/app-error';
 import { resolveLanguage, translate } from '../i18n';
@@ -450,11 +451,14 @@ export function ControlPanel() {
   const setPreviewIndex = useEditorStore((state) => state.setPreviewIndex);
   const setBatchProgress = useEditorStore((state) => state.setBatchProgress);
   const replaceTemplate = useEditorStore((state) => state.replaceTemplate);
+  const resetWorkspace = useEditorStore((state) => state.resetWorkspace);
   const selected = layers.find((layer) => layer.id === selectedId) ?? null;
   const binding = useMemo(() => analyzeBindings(layers), [layers]);
   const importedIsCurrent = records.length > 0 && importedSignature === binding.signature;
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [pendingTemplate, setPendingTemplate] = useState<ReturnType<typeof parseTemplateFile> | null>(null);
+  const [resetOpened, setResetOpened] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const notifyError = (error: unknown) => notifications.show({
     color: 'red', title: t('toast.errorTitle'), message: translateError(error, t),
@@ -520,6 +524,18 @@ export function ControlPanel() {
     const blob = new Blob([JSON.stringify(buildTemplate(canvas, layers), null, 2)], { type: 'application/json' });
     downloadBlob(blob, 'invitation-template.json');
     notifications.show({ color: 'green', title: t('toast.templateExported'), message: t('toast.templateExportedMessage') });
+  };
+
+  const resetWorkspaceData = async () => {
+    setResetting(true);
+    try {
+      await clearEditorPersistence();
+      releaseBackground(useEditorStore.getState().background);
+      resetWorkspace();
+      setResetOpened(false);
+      notifications.show({ color: 'green', title: t('toast.workspaceReset'), message: t('toast.workspaceResetMessage') });
+    } catch (error) { notifyError(error); }
+    finally { setResetting(false); }
   };
 
   const importStatus = binding.mode === 'conflict' ? t('data.conflict')
@@ -624,6 +640,9 @@ export function ControlPanel() {
                 <Button variant="default" leftSection={<IconCode size={16} />} onClick={exportTemplate}>{t('advanced.export')}</Button>
               </Group>
               <Helper>{t('advanced.help')}</Helper>
+              <Button color="red" variant="light" fullWidth mt="md" leftSection={<IconTrash size={16} />} onClick={() => setResetOpened(true)}>
+                {t('advanced.reset')}
+              </Button>
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>
@@ -652,6 +671,14 @@ export function ControlPanel() {
       <Modal opened={pendingTemplate !== null} onClose={() => setPendingTemplate(null)} title={t('modal.templateTitle')} centered>
         <Text size="sm" c="dimmed">{t('modal.templateBody')}</Text>
         <Group justify="flex-end" mt="lg"><Button variant="default" onClick={() => setPendingTemplate(null)}>{t('modal.cancel')}</Button><Button onClick={() => { if (pendingTemplate) replaceTemplate(pendingTemplate.canvas, pendingTemplate.layers); setPendingTemplate(null); }}>{t('modal.import')}</Button></Group>
+      </Modal>
+
+      <Modal opened={resetOpened} onClose={() => { if (!resetting) setResetOpened(false); }} title={t('modal.resetTitle')} centered closeOnClickOutside={!resetting} closeOnEscape={!resetting}>
+        <Text size="sm" c="dimmed">{t('modal.resetBody')}</Text>
+        <Group justify="flex-end" mt="lg">
+          <Button variant="default" disabled={resetting} onClick={() => setResetOpened(false)}>{t('modal.cancel')}</Button>
+          <Button color="red" loading={resetting} onClick={() => void resetWorkspaceData()}>{t('modal.reset')}</Button>
+        </Group>
       </Modal>
     </aside>
   );

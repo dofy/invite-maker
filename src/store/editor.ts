@@ -10,7 +10,7 @@ import {
 import { analyzeBindings } from '../lib/template';
 import { selectRandomPlaceholder } from '../lib/placeholders';
 
-interface EditorState {
+export interface EditorState {
   canvas: CanvasModel;
   background: BackgroundModel;
   layers: TextLayer[];
@@ -31,6 +31,7 @@ interface EditorState {
   clearImportedData: () => void;
   setPreviewIndex: (index: number) => void;
   setBatchProgress: (progress: number | null) => void;
+  resetWorkspace: () => void;
 }
 
 const placeholder: BackgroundModel = selectRandomPlaceholder();
@@ -112,6 +113,24 @@ export const useEditorStore = create<EditorState>((set) => ({
   clearImportedData: () => set({ records: [], headers: [], importedSignature: '', previewIndex: 0 }),
   setPreviewIndex: (previewIndex) => set({ previewIndex }),
   setBatchProgress: (batchProgress) => set({ batchProgress }),
+  resetWorkspace: () => set(() => {
+    const background = selectRandomPlaceholder();
+    return {
+      canvas: {
+        width: background.naturalWidth,
+        height: background.naturalHeight,
+        padding: DEFAULT_CANVAS_PADDING,
+      },
+      background,
+      layers: [],
+      selectedId: null,
+      records: [],
+      headers: [],
+      importedSignature: '',
+      previewIndex: 0,
+      batchProgress: null,
+    };
+  }),
 }));
 
 export function getSelectedLayer(state: EditorState) {

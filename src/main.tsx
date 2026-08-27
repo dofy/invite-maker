@@ -7,6 +7,7 @@ import '@mantine/notifications/styles.css';
 import './i18n';
 import App from './App';
 import { PwaStatus } from './components/PwaStatus';
+import { initializeEditorPersistence } from './lib/editor-persistence';
 import './styles.css';
 
 const theme = createTheme({
@@ -25,12 +26,14 @@ const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Missing application root');
 rootElement.replaceChildren();
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="auto" colorSchemeManager={colorSchemeManager}>
-      <Notifications position="top-right" limit={4} />
-      <PwaStatus />
-      <App />
-    </MantineProvider>
-  </StrictMode>,
-);
+void initializeEditorPersistence().finally(() => {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <MantineProvider theme={theme} defaultColorScheme="auto" colorSchemeManager={colorSchemeManager}>
+        <Notifications position="top-right" limit={4} />
+        <PwaStatus />
+        <App />
+      </MantineProvider>
+    </StrictMode>,
+  );
+});
