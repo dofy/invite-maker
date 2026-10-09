@@ -5,7 +5,7 @@
 Canonical site: https://tsudoi.yahaha.net/
 Source code: https://github.com/dofy/invite-maker
 Support and contact: https://github.com/dofy/invite-maker/issues
-Last updated: 2026-08-27
+Last updated: 2026-10-09
 
 ## Product
 
@@ -13,6 +13,14 @@ Last updated: 2026-08-27
 - [About Tsudoi](https://tsudoi.yahaha.net/about): Product purpose, architecture, principles, and technical references.
 - [Privacy policy](https://tsudoi.yahaha.net/privacy): Local processing, workspace persistence, hosting requests, fonts, preferences, and offline caching.
 - [Terms of use](https://tsudoi.yahaha.net/terms): Acceptable use, user content responsibility, availability, and changes.
+
+## Illustrated user guides
+
+- [简体中文](https://tsudoi.yahaha.net/guide)
+- [English](https://tsudoi.yahaha.net/guide-en)
+- [日本語](https://tsudoi.yahaha.net/guide-ja)
+
+Guides cover layout, variables, TXT/CSV import, PNG/ZIP export, template reuse, and local workspace storage.
 
 ## Core capabilities
 

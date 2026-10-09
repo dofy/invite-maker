@@ -19,6 +19,7 @@ import { notifications } from '@mantine/notifications';
 import {
   IconArrowsMaximize,
   IconBrandGithub,
+  IconBook,
   IconCheck,
   IconChevronDown,
   IconCode,
@@ -55,6 +56,11 @@ import { DataPreviewTable } from './DataPreview';
 import { LayerEditor } from './LayerEditor';
 import { Helper, SectionTitle } from './PanelPrimitives';
 import packageJson from '../../package.json';
+
+function guideUrl(language: string | undefined) {
+  const resolved = resolveLanguage(language) ?? 'en';
+  return resolved.startsWith('zh') ? '/guide.html' : resolved === 'ja' ? '/guide-ja.html' : '/guide-en.html';
+}
 
 const GITHUB_URL = 'https://github.com/dofy/invite-maker';
 
@@ -173,7 +179,7 @@ function ThemePicker() {
 }
 
 export function AppHeader() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <header className="app-title">
@@ -185,7 +191,23 @@ export function AppHeader() {
         </div>
         <small>{t('app.subtitle')}</small>
       </div>
-      <div className="app-title-controls"><LanguagePicker /><ThemePicker /></div>
+      <div className="app-title-controls">
+        <ActionIcon
+          component="a"
+          href={guideUrl(i18n.resolvedLanguage)}
+          target="_blank"
+          rel="noreferrer"
+          className="language-picker"
+          variant="default"
+          radius="xl"
+          aria-label={t('guide.title')}
+          title={t('guide.title')}
+        >
+          <IconBook size={16} stroke={1.8} />
+        </ActionIcon>
+        <LanguagePicker />
+        <ThemePicker />
+      </div>
     </header>
   );
 }
@@ -197,7 +219,7 @@ export function ControlPanel({
   dataPreviewOpened: boolean;
   onDataPreviewOpenedChange: (opened: boolean) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const canvas = useEditorStore((state) => state.canvas);
   const background = useEditorStore((state) => state.background);
   const layers = useEditorStore((state) => state.layers);
@@ -432,6 +454,7 @@ export function ControlPanel({
           {formatCopyright(window.location.hostname)}
         </span>
         <nav className="site-footer-links" aria-label={t('footer.navigation')}>
+          <a href={guideUrl(i18n.resolvedLanguage)} target="_blank" rel="noreferrer">{t('guide.title')}</a>
           <a href="/about.html">{t('footer.about')}</a>
           <a href="/privacy.html">{t('footer.privacy')}</a>
           <a href="/terms.html">{t('footer.terms')}</a>

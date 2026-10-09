@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="color-scheme" content="light dark" /><meta name="description" content="Start with a background, arrange your text, then turn a recipient list into personalized invitations. This illustrated guide takes you through design, preview, export, and reuse." /><title>Tsudoi user guide</title>
+<link rel="canonical" href="https://tsudoi.yahaha.net/guide-en" />
+<link rel="alternate" hreflang="zh-CN" href="https://tsudoi.yahaha.net/guide" />
+<link rel="alternate" hreflang="en" href="https://tsudoi.yahaha.net/guide-en" />
+<link rel="alternate" hreflang="ja" href="https://tsudoi.yahaha.net/guide-ja" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/legal.css" />
+<link rel="stylesheet" href="/guide.css" /><script defer src="/guide.js"></script></head>
+
+
+<body><div class="page-shell guide-shell">
+
+<header class="page-header"><a class="brand" href="/"><img src="/favicon.svg" alt="" />Tsudoi</a>
+<nav class="page-nav" aria-label="Language"><a href="/guide.html" lang="zh-CN">简体中文</a><a href="/guide-en.html" lang="en" aria-current="page">English</a><a href="/guide-ja.html" lang="ja">日本語</a></nav>
+</header>
+
+<main>
+<h1>Tsudoi user guide</h1>
+
+<p class="lede">Start with a background, arrange your text, then turn a recipient list into personalized invitations. This illustrated guide takes you through design, preview, export, and reuse.</p>
+<a class="guide-open" href="/">Open editor</a>
+<nav class="guide-toc" aria-label="On this page">
+<h2>On this page</h2>
+<ol>
+<li><a href="#step-1">Prepare a background and find your way around</a></li>
+
+<li><a href="#step-2">Add text and arrange the layout</a></li>
+
+<li><a href="#step-3">Personalize your text with variables</a></li>
+
+<li><a href="#step-4">Import a list and check each version</a></li>
+
+<li><a href="#step-5">Download one PNG or a batch ZIP</a></li>
+
+<li><a href="#step-6">Save a template for next time</a></li>
+
+<li><a href="#step-7">Common questions and current limits</a></li>
+</ol></nav>
+
+<section id="step-1">
+<h2>1. Prepare a background and find your way around</h2>
+
+<p>Prepare an image with your design: an event background, wedding invitation, or certificate. Choose <strong>Upload invitation background</strong> to load it. The canvas uses the original image dimensions. On a phone in portrait orientation, the canvas stays above a separately scrolling settings panel.</p>
+
+<p>The random illustration shown on first launch is a placeholder. Upload your own background before exporting. <strong>Safe padding</strong> provides snapping guides; it does not crop the image or add a visible border to the output.</p>
+</section>
+
+<section id="step-2">
+<h2>2. Add text and arrange the layout</h2>
+
+<p>Choose <strong>Add text</strong> to create a text layer. Select and drag it on the canvas, or select it from the layer list. The text field accepts multiple lines, plain text, and variables. Use separate layers for a heading, greeting, and location so you can position each independently.</p>
+
+<ul>
+<li><strong>Style:</strong> adjust font, size, weight, color, letter spacing, and outline. Chinese, English, Japanese, and Korean fonts are available; unavailable web fonts fall back to system fonts.</li>
+
+<li><strong>Width:</strong> “Fit content” expands with the text; a fixed width wraps lines automatically. Drag the round blue handle to set a width. Double-click the square fixed-width handle to fit content again.</li>
+
+<li><strong>Alignment and anchor:</strong> alignment positions text inside its box. The nine anchor positions determine which point of the box stays fixed at its coordinate. A bottom-right anchor lets longer text expand up and to the left.</li>
+
+<li><strong>Snapping:</strong> text snaps to canvas edges, centers, safe areas, and other layers. Hold Alt to disable snapping temporarily.</li>
+</ul>
+
+<figure><a href="/guide/editor-en.png" target="_blank" rel="noreferrer"><img src="/guide/editor-en.png" alt="English editor showing invitation text and layout controls" width="1440" height="960" loading="lazy" /></a>
+<figcaption>The editor: preview on the left; background, layers, and text controls on the right.</figcaption>
+</figure>
+</section>
+
+<section id="step-3">
+<h2>3. Personalize your text with variables</h2>
+
+<p>For one image, simply type your final text. To create a different version for each recipient, include data variables. Insert them using the variable controls or type them directly.</p>
+
+
+<pre>Dear {{csv.name}}
+Role: {{csv.title}}
+Number: {{index:3}}</pre>
+
+<p>This reads the <code>name</code> and <code>title</code> CSV columns and adds a sequence starting at 001. <strong>Do not mix TXT and CSV data variables in one template.</strong> Either format can be combined with dynamic dates, sequence numbers, and UUIDs.</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr><th>Variable</th><th>Purpose</th></tr>
+</thead>
+
+<tbody>
+<tr><td><code>{{txt}}</code></td><td>Current TXT line; one image per non-empty line</td></tr>
+
+<tr><td><code>{{csv.name}}</code></td><td>Current value of a CSV column; replace name with your header</td></tr>
+
+<tr><td><code>{{date}}</code></td><td>Local date, for example 2026-10-09</td></tr>
+
+<tr><td><code>{{time}}</code></td><td>Local time in HH:mm:ss format</td></tr>
+
+<tr><td><code>{{datetime}}</code></td><td>Local date and time</td></tr>
+
+<tr><td><code>{{index}}</code></td><td>Sequence starting at 1</td></tr>
+
+<tr><td><code>{{index:3}}</code></td><td>Zero-padded sequence, such as 001; supports 1–12 digits</td></tr>
+
+<tr><td><code>{{uuid}}</code></td><td>Unique per image and text layer; repeated uses in one layer share a value</td></tr>
+</tbody>
+</table>
+</div>
+<p class="notice">Spaces are allowed around names and colons, for example {{ index : 3 }}. The date is the generation date, not your event date. Type a fixed event date as plain text.</p>
+</section>
+
+<section id="step-4">
+<h2>4. Import a list and check each version</h2>
+
+<p><strong>TXT works well for names or complete lines.</strong> Enter <code>Dear {{txt}}</code> in a layer, then import a TXT file under “Batch data”. Each non-empty line produces one image.</p>
+
+
+<pre>Lin Xiao
+Alex Morgan
+Aoi Sato</pre>
+
+<p><strong>CSV is useful for multiple fields such as name, role, and seat.</strong> Its first row must contain headers for every referenced column. Match each header exactly to the variable; Unicode headers such as <code>{{csv.姓名}}</code> are supported. Start with “Download examples” in the editor and save your edited file as UTF-8.</p>
+
+
+<pre>name,title,code
+Lin Xiao,Guest,A-001
+Alex Morgan,Speaker,A-002
+Aoi Sato,Guest,A-003</pre>
+
+<p>The editor detects the import format from your variables. Without a data variable, import is disabled. After import, the first record is shown automatically. Click a table row or activate it with the keyboard to preview another record. Use “Expand preview” for longer lists. Check the longest names for wrapping and overflow.</p>
+
+<p>Changing plain text or styling preserves the imported data. After changing data variables, check the import status: a field missing from the original CSV, or switching between TXT and CSV, requires a new import. Each batch supports up to 200 records.</p>
+
+<figure><a href="/guide/batch-en.png" target="_blank" rel="noreferrer"><img src="/guide/batch-en.png" alt="English batch data panel with a selected record preview" width="1440" height="960" loading="lazy" /></a>
+<figcaption>After importing CSV, select a different row to preview that recipient.</figcaption>
+</figure>
+
+<p>Download sample files：<a href="/examples/csv-multiple-fields.csv" download>CSV</a> / <a href="/examples/txt-names.txt" download>TXT</a></p>
+</section>
+
+<section id="step-5">
+<h2>5. Download one PNG or a batch ZIP</h2>
+
+<p><strong>Download current image</strong> exports the currently previewed record as an original-resolution PNG. A scaled-down preview on screen does not reduce the exported resolution.</p>
+
+<p><strong>Generate batch and download ZIP</strong> renders every imported record and packages the PNG files locally. Batch numbering starts at 1, and date/time values use one reference time for the batch. Download one image first to check fonts and layout, then generate the full set. Keep the page open until the ZIP downloads; unzip it to inspect the results.</p>
+
+<p>Larger backgrounds and longer lists require more time and memory. If generation struggles, reduce the background dimensions or split the list into smaller batches.</p>
+</section>
+
+<section id="step-6">
+<h2>6. Save a template for next time</h2>
+
+<p>Open <strong>Advanced features</strong> and choose “Export template” to save a JSON file. It contains text, variables, styles, widths, coordinates, anchors, and safe padding. <strong>It does not include the background or recipient list.</strong> Keep those files separately when moving to another device. A template can still contain private text you typed, so check it before sharing.</p>
+
+<p>Next time, upload a background and import the template. Confirming the import replaces the current text layers and safe padding and clears the imported list, while keeping the current background. Import your list again to continue.</p>
+
+<p>The latest workspace is saved automatically in this browser and can be restored after refreshing or reopening. This is not a substitute for a backup: clearing site data may remove it. “Reset workspace data” clears local editing data after confirmation; save any files you need first.</p>
+
+<figure><a href="/guide/template-en.png" target="_blank" rel="noreferrer"><img src="/guide/template-en.png" alt="English template import, export, and workspace reset controls" width="1440" height="960" loading="lazy" /></a>
+<figcaption>Advanced features: import or export a template, or reset the local workspace.</figcaption>
+</figure>
+</section>
+
+<section id="step-7">
+<h2>7. Common questions and current limits</h2>
+
+<dl>
+<dt>Why is export or import unavailable?</dt>
+
+<dd>Export requires a real uploaded background. Import requires a TXT or CSV data variable, without mixing both types. Date or sequence variables alone do not enable list import.</dd>
+
+<dt>Why do variables still appear literally?</dt>
+
+<dd>Data variables stay visible before import. After importing, check that CSV headers match the variables and the imported data is still valid.</dd>
+
+<dt>Why does the font look different?</dt>
+
+<dd>Web fonts use Google Fonts and fall back to system fonts when offline or unavailable. Export waits for the required fonts to load; inspect the downloaded PNG before distributing it.</dd>
+
+<dt>Are my materials uploaded?</dt>
+
+<dd>Backgrounds, templates, lists, and results are processed locally; the latest workspace is stored in this browser. Static assets are served by Cloudflare, and web fonts may contact Google Fonts. See the <a href="/privacy.html">privacy policy</a>.</dd>
+
+<dt>Are undo, layer reordering, and huge batches supported?</dt>
+
+<dd>Undo/redo, layer reordering, and a preset template library are not currently available. Each batch is limited to 200 records. Core editing and export work offline after the first load and caching; new web fonts still require a connection.</dd>
+</dl>
+</section>
+
+<p><a class="guide-open" href="/">Return to the editor and start creating</a></p>
+</main>
+
+<footer><span>© 2026 Tsudoi</span><a href="https://github.com/dofy/invite-maker">GitHub</a></footer>
+</div></body>
+</html>

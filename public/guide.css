@@ -1,0 +1,23 @@
+.guide-shell { width: min(1080px, calc(100% - 36px)); }
+.guide-shell section { scroll-margin-top: 24px; margin-top: 48px; padding-top: 8px; border-top: 1px solid var(--page-border); }
+.guide-shell p, .guide-shell li, .guide-shell dl { max-width: 78ch; }
+.guide-shell h2 { font-size: clamp(1.3rem, 4vw, 1.65rem); }
+.guide-open { display: inline-block; padding: 9px 18px; border: 1px solid var(--page-border); border-radius: 8px; background: var(--page-control-bg); text-decoration: none; }
+.guide-toc { margin: 32px 0; padding: 6px 22px 16px; border-left: 3px solid var(--page-accent); background: var(--page-control-bg); }
+.guide-toc h2 { margin: 16px 0 12px; font-size: 1.1rem; }
+.guide-toc ol { padding-left: 22px; columns: 2; column-gap: 32px; }
+.guide-toc li { break-inside: avoid; margin-bottom: 8px; }
+.guide-toc a { text-decoration: none; }
+.guide-shell figure { margin: 28px 0; }
+.guide-shell figure img { display: block; width: 100%; height: auto; border: 1px solid var(--page-border); border-radius: 8px; }
+.guide-shell figcaption { margin-top: 8px; color: var(--page-muted); font-size: .9rem; }
+.guide-shell pre { padding: 18px; overflow-x: auto; border: 1px solid var(--page-border); border-radius: 8px; background: var(--page-control-bg); line-height: 1.7; }
+.guide-shell code { font-size: .92em; overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; }
+.guide-shell table { width: 100%; border-collapse: collapse; text-align: left; }
+.guide-shell th, .guide-shell td { padding: 12px; border-bottom: 1px solid var(--page-border); }
+.guide-shell th { color: var(--page-strong); }
+.guide-shell td:first-child { white-space: nowrap; }
+.guide-shell dt { margin-top: 22px; font-weight: 700; color: var(--page-strong); }
+.guide-shell dd { margin: 6px 0 0; }
+@media (max-width: 600px) { .guide-toc ol { columns: 1; } .guide-shell { width: calc(100% - 28px); } .guide-shell th, .guide-shell td { padding: 10px 6px; } }

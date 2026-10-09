@@ -68,6 +68,12 @@ invite-maker/
 - **静态可索引内容**：`index.html` 的 `#root` 内保留与应用功能一致的语义化回退正文，供不执行 JavaScript 的抓取器和无脚本环境读取；React 启动时清空并接管根节点。更新产品能力时需同步正文、JSON-LD、`public/llms.txt` 与站点说明页。
 - **站点发现与信任**：`public/sitemap.xml`、`robots.txt`、`about.html`、`privacy.html`、`terms.html` 是正式发布资产。隐私说明必须明确区分浏览器本地素材处理、Cloudflare 静态托管请求与 Google Fonts 网络请求，不得夸大为“网站没有任何网络数据”。
 
+## 使用教程
+
+- `public/guide.html`、`guide-en.html`、`guide-ja.html` 是中英日静态图文教程，截图位于 `public/guide/`。
+- 修改用户功能时同步三种教程、README 与站点发现文件；截图使用示例数据，不使用真实私人素材。
+- 编辑器顶部和页脚按界面语言链接到对应教程；PWA 导航排除规则必须包含教程路由。
+
 ## 开发命令
 
 ```bash

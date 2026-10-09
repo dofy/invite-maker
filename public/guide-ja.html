@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="color-scheme" content="light dark" /><meta name="description" content="背景画像に文字を配置し、名簿から一人ひとりの招待状を作りましょう。画像付きで、編集・プレビュー・書き出し・テンプレートの再利用まで説明します。" /><title>Tsudoi 使い方ガイド</title>
+<link rel="canonical" href="https://tsudoi.yahaha.net/guide-ja" />
+<link rel="alternate" hreflang="zh-CN" href="https://tsudoi.yahaha.net/guide" />
+<link rel="alternate" hreflang="en" href="https://tsudoi.yahaha.net/guide-en" />
+<link rel="alternate" hreflang="ja" href="https://tsudoi.yahaha.net/guide-ja" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/legal.css" />
+<link rel="stylesheet" href="/guide.css" /><script defer src="/guide.js"></script></head>
+
+
+<body><div class="page-shell guide-shell">
+
+<header class="page-header"><a class="brand" href="/"><img src="/favicon.svg" alt="" />Tsudoi</a>
+<nav class="page-nav" aria-label="Language"><a href="/guide.html" lang="zh-CN">简体中文</a><a href="/guide-en.html" lang="en">English</a><a href="/guide-ja.html" lang="ja" aria-current="page">日本語</a></nav>
+</header>
+
+<main>
+<h1>Tsudoi 使い方ガイド</h1>
+
+<p class="lede">背景画像に文字を配置し、名簿から一人ひとりの招待状を作りましょう。画像付きで、編集・プレビュー・書き出し・テンプレートの再利用まで説明します。</p>
+<a class="guide-open" href="/">エディターを開く</a>
+<nav class="guide-toc" aria-label="目次">
+<h2>目次</h2>
+<ol>
+<li><a href="#step-1">背景を用意し、画面を確認する</a></li>
+
+<li><a href="#step-2">文字を追加して配置を整える</a></li>
+
+<li><a href="#step-3">変数で内容を差し替える</a></li>
+
+<li><a href="#step-4">名簿を読み込んで確認する</a></li>
+
+<li><a href="#step-5">PNG または ZIP をダウンロードする</a></li>
+
+<li><a href="#step-6">テンプレートを保存して再利用する</a></li>
+
+<li><a href="#step-7">よくある質問と現在の制限</a></li>
+</ol></nav>
+
+<section id="step-1">
+<h2>1. 背景を用意し、画面を確認する</h2>
+
+<p>イベント、結婚式、賞状など、デザイン済みの背景画像を用意します。<strong>招待状の背景画像をアップロード</strong>から画像を選ぶと、元画像のサイズでキャンバスが作られます。スマートフォンの縦画面では、上部にキャンバスを表示したまま下部の設定をスクロールできます。</p>
+
+<p>初回に表示されるイラストは仮の背景です。書き出す前に、自分の背景画像をアップロードしてください。<strong>安全余白</strong>はスナップの目安で、画像の切り抜きや完成画像への枠線追加は行いません。</p>
+</section>
+
+<section id="step-2">
+<h2>2. 文字を追加して配置を整える</h2>
+
+<p><strong>文字を追加</strong>で文字レイヤーを作ります。キャンバス上で選択してドラッグするか、レイヤー一覧から選択します。入力欄では複数行の文字と変数を組み合わせられます。見出し・宛名・会場を別々のレイヤーにすると、個別に配置しやすくなります。</p>
+
+<ul>
+<li><strong>書式：</strong>フォント、サイズ、太さ、色、字間、縁取りを調整します。中英日韓のフォントがあり、Web フォントを読み込めない場合はシステムフォントに切り替わります。</li>
+
+<li><strong>幅：</strong>内容に合わせる設定では文字数に応じて伸縮し、固定幅では自動改行します。青い丸いハンドルをドラッグすると固定幅になり、四角いハンドルをダブルクリックすると内容に合わせる設定に戻ります。</li>
+
+<li><strong>文字揃えとアンカー：</strong>文字揃えは枠内の左・中央・右寄せ、9 つのアンカーは枠のどの位置を座標に固定するかを決めます。右下アンカーなら、長い文字は左上方向へ広がります。</li>
+
+<li><strong>スナップ：</strong>キャンバスの端・中央・安全余白・ほかのレイヤーに吸着します。Alt キーを押している間は一時的に解除できます。</li>
+</ul>
+
+<figure><a href="/guide/editor-ja.png" target="_blank" rel="noreferrer"><img src="/guide/editor-ja.png" alt="日本語エディターの招待状と文字配置設定" width="1440" height="960" loading="lazy" /></a>
+<figcaption>エディター：左側がプレビュー、右側が背景・文字レイヤー・書式の設定です。</figcaption>
+</figure>
+</section>
+
+<section id="step-3">
+<h2>3. 変数で内容を差し替える</h2>
+
+<p>1 枚だけ作る場合は、完成させたい文字をそのまま入力します。宛先ごとに内容を変える場合はデータ変数を入れます。変数ボタンで挿入することも、直接入力することもできます。</p>
+
+
+<pre>{{csv.name}} 様
+区分：{{csv.title}}
+番号：{{index:3}}</pre>
+
+<p>この例では CSV の <code>name</code> 列と <code>title</code> 列を使い、001 からの連番を付けます。<strong>同じテンプレートで TXT と CSV のデータ変数を混在させることはできません。</strong>日付や連番などの動的変数は、どちらの形式とも組み合わせられます。</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr><th>変数</th><th>用途</th></tr>
+</thead>
+
+<tbody>
+<tr><td><code>{{txt}}</code></td><td>TXT の現在の行。空行以外の各行から 1 枚生成</td></tr>
+
+<tr><td><code>{{csv.name}}</code></td><td>CSV の指定列の値。name を自分の見出しに変更可能</td></tr>
+
+<tr><td><code>{{date}}</code></td><td>ローカルの日付。例：2026-10-09</td></tr>
+
+<tr><td><code>{{time}}</code></td><td>ローカルの時刻。HH:mm:ss 形式</td></tr>
+
+<tr><td><code>{{datetime}}</code></td><td>ローカルの日付と時刻</td></tr>
+
+<tr><td><code>{{index}}</code></td><td>1 から始まる連番</td></tr>
+
+<tr><td><code>{{index:3}}</code></td><td>ゼロ埋め連番。例：001。桁数は 1〜12</td></tr>
+
+<tr><td><code>{{uuid}}</code></td><td>画像・レイヤーごとに生成。同じレイヤー内では同じ値を使用</td></tr>
+</tbody>
+</table>
+</div>
+<p class="notice">変数名やコロンの前後には空白を入れられます。例：{{ index : 3 }}。日付変数は生成日であり、イベント開催日ではありません。決まった開催日は通常の文字で入力してください。</p>
+</section>
+
+<section id="step-4">
+<h2>4. 名簿を読み込んで確認する</h2>
+
+<p><strong>TXT は名前だけ、または行全体の差し替えに向いています。</strong>レイヤーに <code>{{txt}} 様</code> と入力して、「一括データ」で TXT を読み込みます。空行以外の各行から 1 枚ずつ生成します。</p>
+
+
+<pre>林 晓
+Alex Morgan
+佐藤 葵</pre>
+
+<p><strong>CSV は名前・敬称・座席など複数の項目に向いています。</strong>1 行目に見出しを置き、参照するすべての列を含めてください。変数と見出しは一致させます。<code>{{csv.氏名}}</code> のような日本語の見出しも使えます。ツール内の「サンプルをダウンロード」を編集し、UTF-8 で保存する方法がおすすめです。</p>
+
+
+<pre>name,title,code
+林 晓,ゲスト,A-001
+Alex Morgan,登壇者,A-002
+佐藤 葵,ゲスト,A-003</pre>
+
+<p>変数に応じてファイル形式が自動判定されます。データ変数がなければ読み込みは無効です。読み込み後は最初の行を表示し、表の行をクリックするかキーボードで選択するとプレビューが切り替わります。「プレビューを開く」は長い名簿の確認に便利です。特に長い名前の改行やはみ出しを確認しましょう。</p>
+
+<p>固定文字や書式を変えても名簿は保持されます。データ変数を変えた後は読み込み状態を確認してください。元の CSV にない列を使う場合や TXT/CSV を切り替えた場合は、再読み込みが必要です。1 回につき最大 200 件です。</p>
+
+<figure><a href="/guide/batch-ja.png" target="_blank" rel="noreferrer"><img src="/guide/batch-ja.png" alt="日本語の一括データパネルと選択した宛先のプレビュー" width="1440" height="960" loading="lazy" /></a>
+<figcaption>CSV を読み込んだら、行を選択して宛先ごとの仕上がりを確認できます。</figcaption>
+</figure>
+
+<p>サンプルファイルをダウンロード：<a href="/examples/csv-multiple-fields.csv" download>CSV</a> / <a href="/examples/txt-names.txt" download>TXT</a></p>
+</section>
+
+<section id="step-5">
+<h2>5. PNG または ZIP をダウンロードする</h2>
+
+<p><strong>現在の画像をダウンロード：</strong>表示中のレコードを、元画像の解像度の PNG として書き出します。画面上のプレビューが縮小されていても、書き出しの解像度は下がりません。</p>
+
+<p><strong>一括生成して ZIP をダウンロード：</strong>読み込んだ各行を PNG にし、ブラウザー内で ZIP にまとめます。連番は 1 から始まり、日付・時刻には一括処理で共通の基準時刻を使います。まず 1 枚ダウンロードしてフォントや配置を確認してから、一括生成しましょう。完了までページを開いたままにし、ZIP を解凍して結果を確認してください。</p>
+
+<p>背景の画素数や件数が多いほど、時間とメモリーが必要です。処理が重い場合は、背景を小さくするか名簿を分割してください。</p>
+</section>
+
+<section id="step-6">
+<h2>6. テンプレートを保存して再利用する</h2>
+
+<p><strong>高度な機能</strong>を開き、「テンプレートを書き出す」で JSON を保存します。文字、変数、書式、幅、座標、アンカー、安全余白を含みますが、<strong>背景画像と名簿は含みません</strong>。別の端末で使うときは、それぞれ別に保存してください。入力した個人情報が文字として残る場合があるため、共有前に内容を確認しましょう。</p>
+
+<p>次回は背景をアップロードしてからテンプレートを読み込みます。確認すると現在の文字レイヤーと安全余白が置き換わり、読み込み済みの名簿はクリアされます。現在の背景は保持されます。名簿を再度読み込めば続けて使えます。</p>
+
+<p>最近の作業内容は現在のブラウザーに自動保存され、再読み込みや再訪問時に復元されます。ただし、バックアップの代わりではありません。サイトデータを消去すると失われる可能性があります。「作業データをリセット」は確認後にローカル編集データを消去します。必要なファイルは先に保存してください。</p>
+
+<figure><a href="/guide/template-ja.png" target="_blank" rel="noreferrer"><img src="/guide/template-ja.png" alt="日本語のテンプレート読み込みと書き出し、作業データのリセット" width="1440" height="960" loading="lazy" /></a>
+<figcaption>高度な機能：テンプレートの読み込み・書き出しと、ローカル作業データのリセット。</figcaption>
+</figure>
+</section>
+
+<section id="step-7">
+<h2>7. よくある質問と現在の制限</h2>
+
+<dl>
+<dt>書き出しや名簿の読み込みができません。</dt>
+
+<dd>書き出しには実際の背景画像が必要です。名簿を読み込む前に TXT または CSV の変数を入れ、両形式を混在させないでください。日付や連番だけでは名簿を読み込めません。</dd>
+
+<dt>変数がそのまま表示されます。</dt>
+
+<dd>読み込み前はデータ変数をそのまま表示します。読み込み後は CSV の見出しと変数が一致しているか、データが有効かを確認してください。</dd>
+
+<dt>フォントが違って見えます。</dt>
+
+<dd>Web フォントは Google Fonts を利用し、オフラインなどで使えない場合はシステムフォントに切り替わります。書き出し時には必要なフォントの読み込みを待ちますが、完成した PNG も確認してください。</dd>
+
+<dt>データはアップロードされますか？</dt>
+
+<dd>背景・テンプレート・名簿・生成結果はブラウザー内で処理し、最近の作業内容もこのブラウザーに保存します。静的ファイルは Cloudflare から配信され、Web フォントは Google Fonts に接続する場合があります。詳しくは<a href="/privacy.html">プライバシーポリシー</a>をご覧ください。</dd>
+
+<dt>元に戻す操作や大量生成はできますか？</dt>
+
+<dd>現時点では元に戻す・やり直し、レイヤー順序変更、プリセットテンプレート集はありません。一括生成は最大 200 件です。初回読み込みとキャッシュ後は、主要な編集・書き出しをオフラインでも使えますが、新しい Web フォントには通信が必要です。</dd>
+</dl>
+</section>
+
+<p><a class="guide-open" href="/">エディターに戻って作成を始める</a></p>
+</main>
+
+<footer><span>© 2026 Tsudoi</span><a href="https://github.com/dofy/invite-maker">GitHub</a></footer>
+</div></body>
+</html>

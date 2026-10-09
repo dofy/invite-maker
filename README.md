@@ -26,6 +26,8 @@ Tsudoi turns one background design into one or an entire batch of personalized i
 > [!IMPORTANT]
 > Backgrounds, recipient data, templates, and generated files remain on your device. Tsudoi has no upload or server-side rendering path.
 
+[Illustrated user guide](https://tsudoi.yahaha.net/guide-en)
+
 ## How It Works
 
 | 1. Design | 2. Personalize | 3. Export |

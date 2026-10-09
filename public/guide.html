@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="color-scheme" content="light dark" /><meta name="description" content="从一张底图开始，排好文字，再把名单变成每个人的邀请函。这里用一个活动邀请示例，带你走完制作、预览与导出的流程。" /><title>Tsudoi 使用教程</title>
+<link rel="canonical" href="https://tsudoi.yahaha.net/guide" />
+<link rel="alternate" hreflang="zh-CN" href="https://tsudoi.yahaha.net/guide" />
+<link rel="alternate" hreflang="en" href="https://tsudoi.yahaha.net/guide-en" />
+<link rel="alternate" hreflang="ja" href="https://tsudoi.yahaha.net/guide-ja" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="/legal.css" />
+<link rel="stylesheet" href="/guide.css" /><script defer src="/guide.js"></script></head>
+
+
+<body><div class="page-shell guide-shell">
+
+<header class="page-header"><a class="brand" href="/"><img src="/favicon.svg" alt="" />Tsudoi</a>
+<nav class="page-nav" aria-label="Language"><a href="/guide.html" lang="zh-CN" aria-current="page">简体中文</a><a href="/guide-en.html" lang="en">English</a><a href="/guide-ja.html" lang="ja">日本語</a></nav>
+</header>
+
+<main>
+<h1>Tsudoi 使用教程</h1>
+
+<p class="lede">从一张底图开始，排好文字，再把名单变成每个人的邀请函。这里用一个活动邀请示例，带你走完制作、预览与导出的流程。</p>
+<a class="guide-open" href="/">打开编辑器</a>
+<nav class="guide-toc" aria-label="本页内容">
+<h2>本页内容</h2>
+<ol>
+<li><a href="#step-1">准备底图，认识工作区</a></li>
+
+<li><a href="#step-2">添加文字，调整排版</a></li>
+
+<li><a href="#step-3">用变量制作个性化内容</a></li>
+
+<li><a href="#step-4">导入名单，逐条检查</a></li>
+
+<li><a href="#step-5">下载单张 PNG 或整批 ZIP</a></li>
+
+<li><a href="#step-6">保存模板，下次继续用</a></li>
+
+<li><a href="#step-7">常见问题与使用边界</a></li>
+</ol></nav>
+
+<section id="step-1">
+<h2>1. 准备底图，认识工作区</h2>
+
+<p>先准备一张已有设计的图片，例如活动背景、婚礼请柬或证书底图。点击<strong>上传邀请函底图</strong>选择图片，画布会使用图片的原始尺寸。手机竖屏时画布保留在上方，设置面板在下方滚动。</p>
+
+<p>打开页面时看到的随机插画只是占位图，正式导出前必须上传自己的底图。<strong>安全内边距</strong>用于排版吸附参考，不会裁切图片，也不会在成品上画出边框。</p>
+</section>
+
+<section id="step-2">
+<h2>2. 添加文字，调整排版</h2>
+
+<p>点击<strong>添加文字</strong>创建一个文字图层。可以直接在画布上选中并拖动，也可以从图层列表中选择。右侧文字输入框支持多行、普通文字和变量组合；标题、称呼、地点建议分成不同图层，便于独立排版。</p>
+
+<ul>
+<li><strong>样式：</strong>调整字体、字号、字重、颜色、字距和描边。中英日韩都有可选字体；网络字体不可用时会回退到系统字体。</li>
+
+<li><strong>宽度：</strong>“适应内容”随文字长度变化；固定宽度会自动换行。拖动蓝色圆形手柄设定宽度，双击固定宽度的方形手柄可恢复适应内容。</li>
+
+<li><strong>对齐与锚点：</strong>对齐控制文字在框内靠左、居中或靠右；九宫格锚点决定框的哪个位置固定在坐标上。例如右下锚点可让变长的文字向左上方展开。</li>
+
+<li><strong>吸附：</strong>拖动时会吸附画布边缘、中心、安全区和其他图层。按住 Alt 可临时关闭吸附。</li>
+</ul>
+
+<figure><a href="/guide/editor-zh.png" target="_blank" rel="noreferrer"><img src="/guide/editor-zh.png" alt="中文编辑器与邀请函文字排版示例" width="1440" height="960" loading="lazy" /></a>
+<figcaption>编辑器：左侧画布预览，右侧上传底图、添加文字并调整样式。</figcaption>
+</figure>
+</section>
+
+<section id="step-3">
+<h2>3. 用变量制作个性化内容</h2>
+
+<p>只做一张图片时，直接输入固定文字即可。想为每个人生成不同内容，就在文字中加入数据变量。可以点击变量按钮插入，也可以手动输入。</p>
+
+
+<pre>诚邀 {{csv.name}}
+身份：{{csv.title}}
+编号：{{index:3}}</pre>
+
+<p>这个示例从 CSV 的 <code>name</code> 和 <code>title</code> 列读取内容，再添加从 001 开始的编号。<strong>TXT 与 CSV 数据变量不能放在同一份模板中</strong>；两者都可以搭配日期、序号等动态变量。</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr><th>变量</th><th>作用</th></tr>
+</thead>
+
+<tbody>
+<tr><td><code>{{txt}}</code></td><td>TXT 当前行；一个非空行一张图</td></tr>
+
+<tr><td><code>{{csv.name}}</code></td><td>CSV 指定列的当前值，可换成你的表头</td></tr>
+
+<tr><td><code>{{date}}</code></td><td>本地日期，例如 2026-10-09</td></tr>
+
+<tr><td><code>{{time}}</code></td><td>本地时间，HH:mm:ss</td></tr>
+
+<tr><td><code>{{datetime}}</code></td><td>本地日期与时间</td></tr>
+
+<tr><td><code>{{index}}</code></td><td>从 1 开始的序号</td></tr>
+
+<tr><td><code>{{index:3}}</code></td><td>补零序号，例如 001；位数支持 1–12</td></tr>
+
+<tr><td><code>{{uuid}}</code></td><td>每张图、每个图层独立生成；同层重复引用复用</td></tr>
+</tbody>
+</table>
+</div>
+<p class="notice">变量名与冒号两侧允许空格，例如 {{ index : 3 }}。日期表示生成当天，并不是自动读取活动日期；固定的活动日期请直接输入文字。</p>
+</section>
+
+<section id="step-4">
+<h2>4. 导入名单，逐条检查</h2>
+
+<p><strong>TXT：适合只有姓名或一整行文字。</strong>在图层中写 <code>亲爱的 {{txt}}</code>，再在“批量数据”中导入 TXT。每个非空行对应一张图片。</p>
+
+
+<pre>林晓
+Alex Morgan
+佐藤 葵</pre>
+
+<p><strong>CSV：适合姓名、称谓、座位等多个字段。</strong>第一行必须是表头，且包含所有被引用的列。表头要与变量中的名字一致，也可以使用中文表头，例如 <code>{{csv.姓名}}</code>。建议从工具内的“下载示例”开始修改，保存为 UTF-8 编码。</p>
+
+
+<pre>name,title,code
+林晓,嘉宾,A-001
+Alex Morgan,Guest,A-002
+佐藤 葵,ゲスト,A-003</pre>
+
+<p>导入方式会根据图层中的变量自动判断；没有数据变量时，导入按钮不可用。导入后默认显示第一条，点击表格行或用键盘激活记录可切换预览；“展开预览”适合检查较长名单。重点查看最长姓名是否换行、文字是否超出底图。</p>
+
+<p>修改固定文字或样式可以继续使用已导入数据。更改数据变量后，请检查导入状态；若新字段不在原 CSV 中，或切换了 TXT/CSV 类型，需要重新导入。每批最多 200 条。</p>
+
+<figure><a href="/guide/batch-zh.png" target="_blank" rel="noreferrer"><img src="/guide/batch-zh.png" alt="中文批量数据面板与选中记录预览" width="1440" height="960" loading="lazy" /></a>
+<figcaption>导入 CSV 后，选择不同的数据行即可切换画布预览。</figcaption>
+</figure>
+
+<p>下载示例文件：<a href="/examples/csv-multiple-fields.csv" download>CSV</a> / <a href="/examples/txt-names.txt" download>TXT</a></p>
+</section>
+
+<section id="step-5">
+<h2>5. 下载单张 PNG 或整批 ZIP</h2>
+
+<p><strong>下载当前图片：</strong>导出画布当前显示的记录，得到一张原图分辨率的 PNG。预览在屏幕上缩小显示，不会降低导出分辨率。</p>
+
+<p><strong>批量生成并下载 ZIP：</strong>导入名单后，工具逐条生成 PNG，再在浏览器中打包下载。批量序号从 1 开始；日期时间变量共用本次批处理的基准时间。建议先下载一张检查字体与排版，再生成整批。生成期间保持页面打开，完成后解压 ZIP 查看文件。</p>
+
+<p>底图像素越大、名单越多，所需时间与内存越多。遇到大批次卡顿，可缩小底图或拆分名单。</p>
+</section>
+
+<section id="step-6">
+<h2>6. 保存模板，下次继续用</h2>
+
+<p>展开<strong>高级功能</strong>，点击“导出模板”保存 JSON。模板包含文字、变量、样式、宽度、坐标、锚点和安全内边距，<strong>不包含底图和名单</strong>。迁移到其他设备时，需要另行保存这两类文件；模板仍可能含你写入的私人文字，分享前请检查。</p>
+
+<p>下次先上传底图，再导入模板；确认导入会替换当前文字图层和安全内边距，并清空已导入名单，保留当前底图。然后重新导入名单即可使用。</p>
+
+<p>编辑器会在当前浏览器中自动保存最近工作区，刷新或再次打开可恢复。自动保存不代替备份；清理站点数据可能丢失工作区。“重置工作区数据”会在确认后清除本地编辑数据，请先保存需要的文件。</p>
+
+<figure><a href="/guide/template-zh.png" target="_blank" rel="noreferrer"><img src="/guide/template-zh.png" alt="中文模板导入导出及重置工作区面板" width="1440" height="960" loading="lazy" /></a>
+<figcaption>高级功能：保存或导入模板 JSON，也可清除本地工作区。</figcaption>
+</figure>
+</section>
+
+<section id="step-7">
+<h2>7. 常见问题与使用边界</h2>
+
+<dl>
+<dt>为什么导出或导入不可用？</dt>
+
+<dd>导出前要上传真实底图；导入名单前先添加 TXT 或 CSV 变量，且不能混用两种数据来源。只有日期或序号变量时，也不能导入名单。</dd>
+
+<dt>为什么变量还显示原样？</dt>
+
+<dd>导入前数据变量会保留原样。导入后检查 CSV 表头与变量是否一致，以及当前数据是否仍然有效。</dd>
+
+<dt>为什么字体与预想不同？</dt>
+
+<dd>网络字体依赖 Google Fonts；离线或网络不可用时会使用系统字体。导出前会等待所需字体加载，仍应检查下载的 PNG。</dd>
+
+<dt>数据会上传吗？</dt>
+
+<dd>底图、模板、名单和生成结果在浏览器本地处理；最近工作区保存在当前浏览器中。网页资源来自 Cloudflare，网络字体可能访问 Google Fonts。详情见<a href="/privacy.html">隐私政策</a>。</dd>
+
+<dt>支持撤销、图层重排或海量生成吗？</dt>
+
+<dd>当前没有撤销/重做、图层顺序调整或预置模板库，单次批量上限为 200。核心编辑与导出在首次加载并缓存后可离线使用，新的网络字体仍需网络。</dd>
+</dl>
+</section>
+
+<p><a class="guide-open" href="/">返回编辑器，开始制作</a></p>
+</main>
+
+<footer><span>© 2026 Tsudoi</span><a href="https://github.com/dofy/invite-maker">GitHub</a></footer>
+</div></body>
+</html>

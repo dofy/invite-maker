@@ -43,7 +43,7 @@ describe('static discovery and citation surface', () => {
 
     const sitemap = new DOMParser().parseFromString(read('public/sitemap.xml'), 'application/xml');
     expect(sitemap.querySelector('parsererror')).toBeNull();
-    expect(sitemap.querySelectorAll('url')).toHaveLength(4);
+    expect(sitemap.querySelectorAll('url')).toHaveLength(7);
 
     const llms = read('public/llms.txt');
     expect(llms).toContain('## Core capabilities');
